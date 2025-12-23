@@ -1,0 +1,111 @@
+@import '../variables';
+@import '../mixins';
+
+.confirm-dialog {
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    animation: dialogFadeIn 0.15s ease-out;
+  }
+
+  &__container {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    max-width: 90vw;
+    animation: dialogScaleIn 0.15s ease-out;
+  }
+
+  &__header {
+    padding: 20px 24px 12px;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+  }
+
+  &__body {
+    padding: 0 24px 24px;
+
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin: 0;
+      word-break: break-word;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 0 24px 24px;
+  }
+
+  &__btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &--cancel {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+
+      &:hover {
+        background: var(--border-color);
+      }
+    }
+
+    &--confirm {
+      background: $accent-color;
+      color: #fff;
+
+      &:hover {
+        background: $accent-hover;
+      }
+    }
+
+    &--danger {
+      background: #dc3545;
+      color: #fff;
+
+      &:hover {
+        background: #c82333;
+      }
+    }
+  }
+
+  @keyframes dialogFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes dialogScaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

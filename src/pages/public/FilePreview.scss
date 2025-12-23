@@ -1,0 +1,322 @@
+// 文件预览页面样式
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+
+  // 加载状态
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    color: var(--text-secondary);
+  }
+
+  &__loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  // 错误状态
+  &__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    color: var(--text-secondary);
+
+    button {
+      padding: 10px 24px;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+
+      &:hover {
+        background: var(--accent-hover);
+      }
+    }
+  }
+
+  // 顶部导航栏
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    gap: 16px;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  // 返回按钮
+  &__back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--border-color);
+    }
+  }
+
+  // 面包屑导航
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &__breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--accent-color);
+    }
+  }
+
+  &__breadcrumb-sep {
+    color: var(--text-tertiary);
+    margin: 0 2px;
+  }
+
+  &__breadcrumb-current {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // 操作按钮
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 14px;
+
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    &.active {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    &--primary {
+      background: var(--accent-color);
+      color: white;
+
+      &:hover {
+        background: var(--accent-hover);
+        color: white;
+      }
+    }
+  }
+
+  // 主内容区域
+  &__main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  // 预览内容
+  &__content {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    
+    // 确保子组件填满空间
+    > * {
+      flex: 1;
+      min-height: 400px;
+    }
+  }
+
+  // 无法预览
+  &__no-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    color: var(--text-secondary);
+    padding: 40px;
+    text-align: center;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    p {
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+
+  &__download-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: var(--accent-hover);
+    }
+  }
+
+  // 文件信息侧边栏
+  &__info {
+    width: 280px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    padding: 20px;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+
+  &__info-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  &__info-list {
+    margin: 0;
+  }
+
+  &__info-item {
+    margin-bottom: 16px;
+
+    dt {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    dd {
+      font-size: 14px;
+      color: var(--text-primary);
+      margin: 0;
+      word-break: break-all;
+    }
+  }
+}
+
+// 响应式
+@media (max-width: 768px) {
+  .file-preview {
+    &__header {
+      padding: 10px 16px;
+    }
+
+    &__breadcrumb {
+      display: none;
+    }
+
+    &__action-btn {
+      padding: 8px;
+
+      span {
+        display: none;
+      }
+    }
+
+    &__info {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 320px;
+      z-index: 100;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    }
+  }
+}

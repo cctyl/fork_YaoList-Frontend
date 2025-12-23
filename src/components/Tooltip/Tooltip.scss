@@ -1,0 +1,54 @@
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+
+  .tooltip-text {
+    position: absolute;
+    z-index: 10000;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    font-size: 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:hover .tooltip-text {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  // 位置变体
+  &--top .tooltip-text {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 6px;
+  }
+
+  &--bottom .tooltip-text {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+  }
+
+  &--left .tooltip-text {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 6px;
+  }
+
+  &--right .tooltip-text {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 6px;
+  }
+}

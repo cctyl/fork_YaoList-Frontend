@@ -1,0 +1,117 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 480px;
+  padding: 14px 18px;
+  border-radius: $radius-md;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  &--exiting {
+    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  
+  &__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__message {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all $transition-base;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+      background: var(--bg-tertiary);
+    }
+  }
+
+  &--success {
+    border-left: 3px solid $success-color;
+    
+    .toast__icon {
+      color: $success-color;
+    }
+  }
+
+  &--error {
+    border-left: 3px solid $error-color;
+    
+    .toast__icon {
+      color: $error-color;
+    }
+  }
+
+  &--warning {
+    border-left: 3px solid $warning-color;
+    
+    .toast__icon {
+      color: $warning-color;
+    }
+  }
+
+  &--info {
+    border-left: 3px solid $accent-color;
+    
+    .toast__icon {
+      color: $accent-color;
+    }
+  }
+
+  &--plain {
+    border-left: 3px solid var(--text-secondary);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 24px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 24px)) scale(0.95);
+  }
+}

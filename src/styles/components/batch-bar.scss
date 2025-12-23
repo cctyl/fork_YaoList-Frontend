@@ -1,0 +1,61 @@
+@import '../variables';
+@import '../mixins';
+
+.users__batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-md;
+  background: rgba($accent-color, 0.05);
+  border: 1px solid rgba($accent-color, 0.2);
+  border-radius: $radius-md;
+  animation: slideDown 0.3s ease-out;
+}
+
+.users__batch-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: $accent-color;
+}
+
+.users__batch-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.users__batch-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: $radius-sm;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-1px);
+  }
+
+  &--danger {
+    color: $error-color;
+    
+    &:hover {
+      background: rgba($error-color, 0.1);
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

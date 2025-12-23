@@ -1,0 +1,686 @@
+@import '../variables';
+@import '../mixins';
+
+.login {
+  &__container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  &__card {
+    width: 380px;
+    padding: 28px 32px 16px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    animation: cardFadeIn 0.5s ease-out;
+
+    // 毛玻璃效果
+    &--glass {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(120px) saturate(250%) brightness(1.1);
+      -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  @keyframes cardFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  &__logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__error {
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #dc2626;
+    font-size: 14px;
+  }
+
+  &__field {
+    input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f5f5f7;
+      transition: background 0.2s;
+      outline: none;
+
+      &:focus {
+        background: #eee;
+      }
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+  }
+
+  &__captcha {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    animation: captchaSlideIn 0.3s ease-out;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f5f5f7;
+      outline: none;
+      transition: all 0.2s ease;
+
+      &:focus {
+        background: #eee;
+      }
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+
+    img {
+      height: 44px;
+      width: 120px;
+      flex-shrink: 0;
+      object-fit: contain;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #fff;
+
+      &:hover {
+        opacity: 0.8;
+        transform: scale(1.02);
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+    }
+  }
+
+  &__radio-group {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 12px 0;
+    margin-bottom: 8px;
+  }
+
+  &__radio-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-size: 14px;
+    color: var(--text-primary);
+
+    input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    svg {
+      flex-shrink: 0;
+      color: var(--text-secondary);
+    }
+
+    span {
+      color: var(--text-primary);
+    }
+  }
+
+  &__subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+
+  &__button--secondary {
+    background: var(--bg-tertiary) !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 0.5rem;
+
+    &:hover:not(:disabled) {
+      background: var(--bg-secondary) !important;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__button--outline {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+
+    &:hover:not(:disabled) {
+      background: var(--bg-secondary) !important;
+    }
+  }
+
+  &__button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+
+    .login__button {
+      flex: 1;
+    }
+  }
+
+  &__toggle-tabs {
+    display: flex;
+    background: #e8e8e8;
+    border-radius: 25px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+
+  &__toggle-tab {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+
+    &:hover:not(&--active) {
+      color: #333;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    &--active {
+      background: #fff;
+      color: #333;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__success-hint {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    text-align: center;
+
+    span {
+      color: #666;
+      font-size: 12px;
+    }
+  }
+
+  @keyframes captchaSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  &__form {
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  &__subtitle {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__success-hint {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #606266;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      display: none;
+
+      & + .login__checkbox {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+
+        svg {
+          width: 12px;
+          height: 12px;
+          stroke: #fff;
+          stroke-width: 3;
+          opacity: 0;
+          transform: scale(0);
+          transition: all 0.2s ease;
+        }
+      }
+
+      &:checked + .login__checkbox {
+        background: #1d1d1f;
+        border-color: #1d1d1f;
+
+        svg {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+    }
+
+    &:hover .login__checkbox {
+      border-color: #1d1d1f;
+    }
+  }
+
+  &__forgot {
+    font-size: 14px;
+    color: #606266;
+    text-decoration: none;
+
+    &:hover {
+      color: #1d1d1f;
+    }
+  }
+
+  &__button {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    background: #1d1d1f;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__guest-button {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #666;
+    background: #f5f5f7;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #eee;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &__2fa {
+    animation: fadeIn 0.3s ease;
+
+    input {
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 8px;
+      font-weight: 600;
+    }
+  }
+
+  &__2fa-hint {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+  }
+
+  &__register {
+    text-align: right;
+    font-size: 13px;
+    color: #999;
+    margin-top: 8px;
+
+    a {
+      color: #1d1d1f;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 16px;
+  }
+
+  &__footer-btn {
+    border: none;
+    background: none;
+    color: #1d1d1f;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.6;
+    }
+  }
+
+  &__lang-wrapper {
+    position: relative;
+  }
+
+  &__lang-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 4px 0;
+    min-width: 120px;
+    z-index: 100;
+    animation: langMenuIn 0.15s ease-out;
+  }
+
+  @keyframes langMenuIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  &__lang-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #f5f5f7;
+    }
+
+    &--active {
+      color: #1d1d1f;
+      font-weight: 500;
+      background: #f5f5f7;
+    }
+  }
+
+  // 深色模式
+  &__container--dark {
+    background: transparent;
+
+    .login__card {
+      background: #2a2a2a;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .login__title {
+      color: #fff;
+    }
+
+    .login__field input {
+      background: #333;
+      color: #fff;
+
+      &::placeholder {
+        color: #777;
+      }
+
+      &:focus {
+        background: #3a3a3a;
+      }
+    }
+
+    .login__remember {
+      color: #aaa;
+    }
+
+    .login__checkbox {
+      border-color: #555;
+    }
+
+    .login__remember input:checked + .login__checkbox {
+      background: #fff;
+      border-color: #fff;
+
+      svg {
+        stroke: #1a1a1a;
+      }
+    }
+
+    .login__remember:hover .login__checkbox {
+      border-color: #888;
+    }
+
+    .login__forgot {
+      color: #aaa;
+
+      &:hover {
+        color: #fff;
+      }
+    }
+
+    .login__button {
+      background: #fff;
+      color: #1a1a1a;
+
+      &:hover:not(:disabled) {
+        background: #eee;
+      }
+    }
+
+    .login__guest-button {
+      background: #333;
+      color: #ccc;
+
+      &:hover {
+        background: #3a3a3a;
+      }
+    }
+
+    .login__register {
+      color: #777;
+
+      a {
+        color: #fff;
+      }
+    }
+
+    .login__footer-btn {
+      color: #fff;
+    }
+
+    .login__error {
+      background: #3a2020;
+      border-color: #5a3030;
+      color: #ff6b6b;
+    }
+
+    .login__lang-menu {
+      background: #2a2a2a;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .login__lang-item {
+      color: #ccc;
+
+      &:hover {
+        background: #333;
+      }
+
+      &--active {
+        color: #fff;
+        background: #333;
+      }
+    }
+
+    .login__captcha {
+      input {
+        background: #333;
+        color: #fff;
+
+        &:focus {
+          background: #3a3a3a;
+        }
+
+        &::placeholder {
+          color: #777;
+        }
+      }
+
+      img {
+        background: #444;
+      }
+    }
+
+    .login__toggle-tabs {
+      background: #333;
+    }
+
+    .login__toggle-tab {
+      color: #999;
+
+      &:hover:not(.login__toggle-tab--active) {
+        color: #ccc;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &--active {
+        background: #555;
+        color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .login__button--outline {
+      border-color: #555 !important;
+      color: #ccc !important;
+
+      &:hover:not(:disabled) {
+        background: #333 !important;
+      }
+    }
+  }
+}

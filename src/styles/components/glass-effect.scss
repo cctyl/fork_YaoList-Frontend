@@ -1,0 +1,392 @@
+// 毛玻璃效果样式
+// 当 .glass-enabled 类添加到 html 元素时生效
+
+// 毛玻璃效果启用时
+.glass-enabled {
+  // 主卡片（文件列表）
+  .file-browser__main-card {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 面包屑卡片
+  .file-browser__breadcrumb-card {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 元信息卡片（header/readme）
+  .file-browser__meta-card {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 悬浮工具栏
+  .file-browser__floating-toolbar {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 语言和深色模式按钮
+  .file-browser__header-btn {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  // 搜索框
+  .file-browser__search {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  // 搜索下拉列表
+  .file-browser__search-dropdown {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 语言菜单
+  .file-browser__lang-menu {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 分页器
+  .file-browser__pagination {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  // 每页数下拉菜单
+  .file-browser__per-page-dropdown {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 每页数选择器触发按钮
+  .file-browser__per-page-trigger {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  
+  // 预览页面
+  .file-preview__info-card,
+  .file-preview__content-card {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 压缩包预览 - 整体透明
+  .file-preview__content-card .archive-preview {
+    background: transparent !important;
+  }
+  
+  .file-preview__content-card .archive-preview__header {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__breadcrumb {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__list {
+    background: transparent !important;
+  }
+  
+  .file-preview__content-card .archive-preview__row {
+    background: rgba(255, 255, 255, 0.15) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__row:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__pagination {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-top-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  // 面包屑分隔符增强可见度
+  .file-browser__breadcrumb-sep {
+    color: var(--text-primary) !important;
+    opacity: 0.6 !important;
+  }
+  
+  // 右键菜单
+  .file-browser__context-menu {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 多选操作栏
+  .file-browser__selection-bar {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 任务列表
+  .file-browser__task-list {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 弹窗
+  .file-browser__path-modal,
+  .file-browser__delete-dialog,
+  .file-browser__upload-dialog,
+  .file-browser__dialog,
+  .file-browser__direct-link-dialog,
+  .file-browser__share-dialog,
+  .file-browser__search-modal {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  // 弹窗内部区域透明
+  .file-browser__direct-link-dialog-actions,
+  .file-browser__share-dialog-actions,
+  .file-browser__dialog-actions {
+    background: transparent !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  // 弹窗内输入框半透明
+  .file-browser__direct-link-dialog input,
+  .file-browser__direct-link-dialog-field input,
+  .file-browser__share-dialog input,
+  .file-browser__dialog input,
+  .file-browser__dialog-input,
+  .file-browser__rename-dialog input,
+  .file-browser__path-modal input,
+  .file-browser__search-modal-input-wrapper {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+  
+  
+  .file-browser__direct-link-dialog-filename {
+    background: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 任务侧边栏
+  .task-sidebar {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // EXIF/视频/音频信息弹窗
+  .exif-modal-apple__content {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 重命名弹窗
+  .file-browser__rename-dialog {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 上传进度弹窗
+  .upload-progress-modal {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(250%) brightness(1.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  // 弹窗打开时整个页面模糊
+  .file-browser__modal-overlay,
+  .file-browser__dialog-overlay,
+  .exif-modal-apple {
+    background: rgba(0, 0, 0, 0.3) !important;
+    z-index: 9999 !important;
+  }
+}
+
+// 暗色模式
+[data-theme="dark"].glass-enabled,
+.glass-enabled[data-theme="dark"] {
+  .file-browser__main-card,
+  .file-browser__breadcrumb-card,
+  .file-browser__meta-card,
+  .file-browser__floating-toolbar,
+  .file-browser__pagination,
+  .file-browser__per-page-dropdown,
+  .file-browser__per-page-trigger,
+  .file-browser__header-btn,
+  .file-browser__search,
+  .file-browser__search-dropdown,
+  .file-browser__lang-menu,
+  .file-browser__context-menu,
+  .file-browser__selection-bar,
+  .task-sidebar,
+  .exif-modal-apple__content,
+  .upload-progress-modal,
+  .file-preview__info-card,
+  .file-preview__content-card {
+    background: rgba(30, 30, 30, 0.5) !important;
+    backdrop-filter: blur(120px) saturate(200%) brightness(0.9) !important;
+    -webkit-backdrop-filter: blur(120px) saturate(200%) brightness(0.9) !important;
+    border: 1px solid rgba(60, 60, 60, 0.5) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  .file-browser__task-list {
+    background: rgba(40, 40, 40, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(80, 80, 80, 0.5) !important;
+    box-shadow: none !important;
+  }
+  
+  // 弹窗
+  .file-browser__path-modal,
+  .file-browser__delete-dialog,
+  .file-browser__upload-dialog,
+  .file-browser__dialog,
+  .file-browser__rename-dialog,
+  .file-browser__direct-link-dialog,
+  .file-browser__share-dialog,
+  .file-browser__search-modal {
+    background: rgba(30, 30, 30, 0.9) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(80, 80, 80, 0.5) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  // 弹窗内部区域透明
+  .file-browser__direct-link-dialog-actions,
+  .file-browser__share-dialog-actions,
+  .file-browser__dialog-actions {
+    background: transparent !important;
+    border-top: 1px solid rgba(60, 60, 60, 0.3) !important;
+  }
+  
+  // 弹窗内输入框半透明
+  .file-browser__direct-link-dialog input,
+  .file-browser__direct-link-dialog-field input,
+  .file-browser__share-dialog input,
+  .file-browser__dialog input,
+  .file-browser__dialog-input,
+  .file-browser__rename-dialog input,
+  .file-browser__path-modal input {
+    background: rgba(50, 50, 50, 0.5) !important;
+    border: 1px solid rgba(80, 80, 80, 0.5) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+  
+  .file-browser__direct-link-dialog-filename {
+    background: rgba(50, 50, 50, 0.3) !important;
+  }
+  
+  // 压缩包预览 - 整体透明
+  .file-preview__content-card .archive-preview {
+    background: transparent !important;
+  }
+  
+  .file-preview__content-card .archive-preview__header {
+    background: rgba(40, 40, 40, 0.3) !important;
+    border-bottom-color: rgba(60, 60, 60, 0.2) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__breadcrumb {
+    background: rgba(40, 40, 40, 0.2) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__list {
+    background: transparent !important;
+  }
+  
+  .file-preview__content-card .archive-preview__row {
+    background: rgba(50, 50, 50, 0.2) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__row:hover {
+    background: rgba(60, 60, 60, 0.4) !important;
+  }
+  
+  .file-preview__content-card .archive-preview__pagination {
+    background: rgba(40, 40, 40, 0.3) !important;
+    border-top-color: rgba(60, 60, 60, 0.2) !important;
+  }
+  
+  // 面包屑分隔符
+  .file-browser__breadcrumb-sep {
+    color: var(--text-primary) !important;
+    opacity: 0.5 !important;
+  }
+  
+  // 暗色模式弹窗打开时整个页面模糊
+  .file-browser__modal-overlay,
+  .file-browser__dialog-overlay,
+  .exif-modal-apple {
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    z-index: 9999 !important;
+  }
+}

@@ -1,0 +1,179 @@
+@import '../variables';
+@import '../mixins';
+
+.mounts {
+  &__container {
+    max-width: 1200px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-xl;
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+  }
+
+  &__add-button {
+    @include button-primary;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__loading {
+    @include flex-center;
+    padding: 60px 20px;
+    color: $text-secondary;
+    font-size: 15px;
+  }
+
+  &__empty {
+    @include flex-center;
+    flex-direction: column;
+    padding: 80px 20px;
+    text-align: center;
+
+    svg {
+      width: 64px;
+      height: 64px;
+      color: $text-tertiary;
+      margin-bottom: $spacing-lg;
+    }
+
+    p {
+      font-size: 18px;
+      font-weight: 500;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+    }
+
+    span {
+      font-size: 14px;
+      color: $text-secondary;
+    }
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: $spacing-lg;
+  }
+
+  &__card {
+    @include card;
+    padding: $spacing-lg;
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: both;
+    
+    @for $i from 1 through 12 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.05}s;
+      }
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+  }
+
+  &__card-title {
+    flex: 1;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: $spacing-sm;
+    }
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+
+    &--enabled {
+      background: rgba($success-color, 0.1);
+      color: $success-color;
+    }
+
+    &--disabled {
+      background: rgba($text-tertiary, 0.1);
+      color: $text-tertiary;
+    }
+  }
+
+  &__card-actions {
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  &__icon-button {
+    @include icon-button;
+    transform: scale(1);
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__card-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm 0;
+    border-bottom: 1px solid $bg-tertiary;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__label {
+    font-size: 13px;
+    color: $text-secondary;
+    font-weight: 500;
+  }
+
+  &__value {
+    font-size: 14px;
+    color: $text-primary;
+    @include text-ellipsis;
+    max-width: 60%;
+    text-align: right;
+  }
+}
