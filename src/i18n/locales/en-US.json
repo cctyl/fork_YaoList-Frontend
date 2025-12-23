@@ -538,6 +538,8 @@
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode",
     "switchLanguage": "Switch language",
+    "listView": "List view",
+    "galleryView": "Gallery view",
     "developing": "Feature in development...",
     "refreshSuccess": "Refreshed successfully",
     "createFolderSuccess": "Folder created successfully",

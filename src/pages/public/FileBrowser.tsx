@@ -11,7 +11,8 @@ import {
   FileSpreadsheet, Presentation, Database, Settings, Terminal, Disc,
   Edit3, Trash2, Link2, Copy, Move, Share2, X, FolderOpen, ChevronLeft, ChevronDown,
   RefreshCw, FolderPlus, FilePlus, Upload, CheckSquare, Check, ListTodo, HardDrive,
-  ArrowUp, ArrowDown, Sun, Moon, Languages, Lock, Loader2, Package, Search, AlertTriangle
+  ArrowUp, ArrowDown, Sun, Moon, Languages, Lock, Loader2, Package, Search, AlertTriangle,
+  LayoutGrid, List
 } from 'lucide-react'
 import { api } from '../../utils/api'
 import { useToast } from '../../components/Toast'
@@ -517,6 +518,7 @@ export default function FileBrowser() {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [allFileNames, setAllFileNames] = useState<string[]>([])  // 目录下所有文件名
+  const [viewMode, setViewMode] = useState<'list' | 'gallery'>('list')  // 视图模式
   const [isPackaging, setIsPackaging] = useState(false)
   const [aboutDialog, setAboutDialog] = useState(false)
   const [driverSpaceInfo, setDriverSpaceInfo] = useState<Record<string, SpaceInfo | null>>({})
@@ -1782,7 +1784,38 @@ export default function FileBrowser() {
               </div>
               <div className="file-browser__col-actions"></div>
             </div>
-            <div className="file-browser__table-body">
+            {/* 图片瀑布流视图 */}
+            {viewMode === 'gallery' && (
+              <div className="file-browser__gallery">
+                {files.filter(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name)).map((file, index) => (
+                  <div 
+                    key={file.name || `gallery-${index}`}
+                    className="file-browser__gallery-item"
+                    onClick={() => handleNavigate(currentPath ? `${currentPath}/${file.name}` : file.name)}
+                    onContextMenu={(e) => handleContextMenu(e, file)}
+                  >
+                    <div className="file-browser__gallery-image">
+                      <img 
+                        src={`/api/fs/preview?path=${encodeURIComponent((currentPath ? `/${currentPath}/${file.name}` : `/${file.name}`))}`}
+                        alt={file.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.style.display = 'none'
+                          target.parentElement?.classList.add('file-browser__gallery-image--error')
+                        }}
+                      />
+                    </div>
+                    <div className="file-browser__gallery-name" title={file.name}>
+                      {file.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 列表视图 */}
+            <div className={`file-browser__table-body ${viewMode === 'gallery' ? 'file-browser__table-body--hidden' : ''}`}>
               {files.map((file, index) => {
                 const { icon: IconComponent, color } = getFileIcon(file.name, file.is_dir)
                 const isSelected = selectedFiles.includes(file.name)
@@ -1869,6 +1902,28 @@ export default function FileBrowser() {
                   return parts.join(' ') || t('fileBrowser.emptyFolder')
                 })()}
               </div>
+
+              {/* 视图切换按钮 - 只在有图片时显示 */}
+              {files.some(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name)) && (
+                <div className="file-browser__view-toggle">
+                  <Tooltip text={t('fileBrowser.listView') || '列表视图'} position="top">
+                    <button 
+                      className={`file-browser__view-toggle-btn ${viewMode === 'list' ? 'file-browser__view-toggle-btn--active' : ''}`}
+                      onClick={() => setViewMode('list')}
+                    >
+                      <List size={16} />
+                    </button>
+                  </Tooltip>
+                  <Tooltip text={t('fileBrowser.galleryView') || '图片视图'} position="top">
+                    <button 
+                      className={`file-browser__view-toggle-btn ${viewMode === 'gallery' ? 'file-browser__view-toggle-btn--active' : ''}`}
+                      onClick={() => setViewMode('gallery')}
+                    >
+                      <LayoutGrid size={16} />
+                    </button>
+                  </Tooltip>
+                </div>
+              )}
 
               {/* 页码导航 - 超过10项显示 */}
               {pagination.total > 10 && (
