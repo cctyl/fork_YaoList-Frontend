@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense, useContext } from 'react'
+import { useState, useEffect, useRef, Suspense, useContext, useCallback } from 'react'
 import Vara from 'vara'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -171,7 +171,7 @@ interface UserPermissions {
 }
 
 
-export default function FilePreview() {
+export default function FilePreviewContent() {
   const { '*': pathParam } = useParams()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
@@ -193,7 +193,7 @@ export default function FilePreview() {
   
   // 使用 FileRouter 提供的共享上下文
   const shared = useContext(SharedContext)
-  const { siteTitle, siteIcon, darkMode, language, hasBackground } = shared
+  const { siteTitle, siteIcon, darkMode, language, hasBackground, setPageState, setOnPasswordSubmit } = shared
   
   const currentPath = pathParam || ''
   const varaInitialized = useRef(false)
@@ -258,15 +258,42 @@ export default function FilePreview() {
     return ''
   }
 
-  // 处理密码提交
-  const handlePasswordSubmit = () => {
+  // 处理密码提交（接受来自 FileRouter 的密码参数）
+  const handlePasswordSubmit = useCallback((password: string) => {
     const fullPath = '/' + currentPath
-    const newPasswords = { ...pathPassword, [fullPath]: passwordInput }
+    const newPasswords = { ...pathPassword, [fullPath]: password }
     setPathPassword(newPasswords)
     sessionStorage.setItem('pathPasswords', JSON.stringify(newPasswords))
-    loadFileInfo(currentPath, passwordInput)
-    setPasswordInput('')
-  }
+    setPageState({ passwordLoading: true })
+    loadFileInfo(currentPath, password)
+  }, [currentPath, pathPassword, setPageState])
+
+  // 注册密码提交回调到 FileRouter
+  useEffect(() => {
+    setOnPasswordSubmit(handlePasswordSubmit)
+    return () => setOnPasswordSubmit(undefined)
+  }, [handlePasswordSubmit, setOnPasswordSubmit])
+
+  // 根据文件名预先设置预览器（不等待文件信息加载完成）
+  useEffect(() => {
+    if (currentPath) {
+      const fileName = currentPath.split('/').pop() || ''
+      if (fileName) {
+        // 检查加密音频设置
+        let encryptedAudioEnabled = false
+        try {
+          const settings = JSON.parse(localStorage.getItem('audioPreviewSettings') || '{}')
+          encryptedAudioEnabled = settings.allowEncryptedAudio || false
+        } catch {}
+        
+        const availablePreviewers = getPreviewers(fileName, encryptedAudioEnabled)
+        setPreviewers(availablePreviewers)
+        if (availablePreviewers.length > 0 && !currentPreviewer) {
+          setCurrentPreviewer(availablePreviewers[0])
+        }
+      }
+    }
+  }, [currentPath])
 
   // 加载文件信息
   const loadFileInfo = async (path: string, password?: string) => {
@@ -555,182 +582,68 @@ export default function FilePreview() {
   // 预览器切换菜单状态
   const [showPreviewMenu, setShowPreviewMenu] = useState(false)
 
-  const breadcrumbs = getBreadcrumbs()
+  // 同步加载状态到 FileRouter
+  useEffect(() => {
+    setPageState({ contentLoading: loading })
+  }, [loading, setPageState])
 
+  // 只在加载完成后同步元信息，避免加载过程中清空元信息卡片
+  useEffect(() => {
+    if (!loading) {
+      setPageState({ header, readme, passwordRequired })
+    }
+  }, [header, readme, passwordRequired, loading, setPageState])
+
+  // FilePreviewContent 只渲染 main-card 内部内容
+  // 公共部分（header、面包屑、meta-card、page-footer、密码验证界面）由 FileRouter 处理
+
+  // 加载动画由 FileRouter 渲染，这里不再渲染
   return (
-    <div className={`file-browser ${hasBackground ? 'file-browser--with-bg' : ''}`}>
-      <div className="file-browser__header">
-        <div className="file-browser__header-left">
-          <img src={siteIcon} alt={siteTitle} className="file-browser__logo" />
-          <h1 className="file-browser__site-title">{siteTitle}</h1>
-        </div>
-        <div className="file-browser__header-right">
-          <div className="file-browser__lang-switch">
+    <>
+      {/* 预览模式选择器（不等待文件信息加载完成） */}
+      {previewers.length > 0 && (
+        <div className="file-preview__toolbar">
+          <div className="file-preview__dropdown">
             <button 
-              className="file-browser__header-btn"
-              onClick={() => setShowLangMenu(!showLangMenu)}
-              title="切换语言"
+              className="file-preview__dropdown-btn"
+              onClick={() => setShowPreviewMenu(!showPreviewMenu)}
             >
-              <Languages size={18} />
+              <span>{currentPreviewer?.name ? t(currentPreviewer.name) : t('filePreview.selectPreviewMode')}</span>
+              <ChevronDown size={16} className={showPreviewMenu ? 'rotate' : ''} />
             </button>
-            {showLangMenu && (
-              <div className="file-browser__lang-menu">
-                <button 
-                  className={`file-browser__lang-item ${language === 'zh-CN' ? 'active' : ''}`}
-                  onClick={() => toggleLanguage('zh-CN')}
-                >
-                  简体中文
-                </button>
-                <button 
-                  className={`file-browser__lang-item ${language === 'en-US' ? 'active' : ''}`}
-                  onClick={() => toggleLanguage('en-US')}
-                >
-                  English
-                </button>
+            {showPreviewMenu && (
+              <div className="file-preview__dropdown-menu">
+                {previewers.map(p => (
+                  <button
+                    key={p.name}
+                    className={`file-preview__dropdown-item ${currentPreviewer?.name === p.name ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentPreviewer(p)
+                      setShowPreviewMenu(false)
+                    }}
+                  >
+                    {t(p.name)}
+                  </button>
+                ))}
               </div>
             )}
           </div>
-          <button 
-            className="file-browser__header-btn"
-            onClick={() => shared.setDarkMode(!darkMode)}
-            title={darkMode ? '切换到浅色模式' : '切换到暗色模式'}
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-        </div>
-      </div>
-      
-      {/* 顶部说明 (Header) - 在面包屑卡片上方 */}
-      {header && !passwordRequired && (
-        <div className="file-browser__meta-card file-browser__meta-card--header">
-          <div className="file-browser__meta-content">
-            {isHtmlContent(header) ? (
-              <HtmlContentRenderer content={header} />
-            ) : (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
-                components={{
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const lang = match?.[1]
-                    const code = String(children).replace(/\n$/, '')
-                    if (lang === 'mermaid') {
-                      return <MermaidChart chart={code} />
-                    }
-                    return <code className={className} {...props}>{children}</code>
-                  },
-                  p({ children }) {
-                    if (typeof children === 'string') {
-                      return <p>{processEmoji(children)}</p>
-                    }
-                    return <p>{children}</p>
-                  }
-                }}
-              >{header}</ReactMarkdown>
-            )}
-          </div>
+          {/* 文本预览状态信息插槽 */}
+          <div id="text-preview-status-slot" className="file-preview__status-slot"></div>
         </div>
       )}
 
-      <div className="file-browser__breadcrumb-card">
-        {breadcrumbs.map((crumb, index) => (
-          <div key={crumb.path} className="file-browser__breadcrumb-item">
-            {index === 0 ? (
-              <Link to="/" className="file-browser__breadcrumb-link">
-                <Home size={18} />
-                <span>{crumb.name}</span>
-              </Link>
-            ) : (
-              <>
-                <ChevronRight size={18} className="file-browser__breadcrumb-separator" />
-                <Link 
-                  to={`/${crumb.path}`}
-                  className={`file-browser__breadcrumb-link ${index === breadcrumbs.length - 1 ? 'file-browser__breadcrumb-link--current' : ''}`}
-                >
-                  {crumb.name}
-                </Link>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="file-browser__main-card">
-        {/* 密码验证界面 */}
-        {passwordRequired ? (
-          <div className="file-browser__password">
-            <Lock size={48} />
-            <h2>{t('fileBrowser.passwordRequired') || '需要密码'}</h2>
-            <p>{t('fileBrowser.passwordHint') || '此文件需要密码才能访问'}</p>
-            <div className="file-browser__password-form">
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                placeholder={t('fileBrowser.enterPassword') || '请输入密码'}
-                autoFocus
-              />
-              <button onClick={handlePasswordSubmit}>
-                {t('fileBrowser.confirm') || '确认'}
-              </button>
-            </div>
-          </div>
-        ) : loading ? (
-          <div className="file-browser__loading">
-            <div className="file-browser__spinner"></div>
-            <p>{t('fileBrowser.loading')}</p>
-          </div>
-        ) : error ? (
+      {error ? (
           <div className="file-browser__empty">
             <File size={48} />
             <p>{error}</p>
           </div>
-        ) : fileInfo ? (
+        ) : fileInfo && downloadUrl ? (
           <>
-            {/* 自定义预览模式切换器 */}
-            {previewers.length > 0 && (
-              <div className="file-preview__toolbar">
-                <div className="file-preview__dropdown">
-                  <button 
-                    className="file-preview__dropdown-btn"
-                    onClick={() => setShowPreviewMenu(!showPreviewMenu)}
-                  >
-                    <span>{currentPreviewer?.name ? t(currentPreviewer.name) : t('filePreview.selectPreviewMode')}</span>
-                    <ChevronDown size={16} className={showPreviewMenu ? 'rotate' : ''} />
-                  </button>
-                  {showPreviewMenu && (
-                    <div className="file-preview__dropdown-menu">
-                      {previewers.map(p => (
-                        <button
-                          key={p.name}
-                          className={`file-preview__dropdown-item ${currentPreviewer?.name === p.name ? 'active' : ''}`}
-                          onClick={() => {
-                            setCurrentPreviewer(p)
-                            setShowPreviewMenu(false)
-                          }}
-                        >
-                          {t(p.name)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {/* 文本预览状态信息插槽 */}
-                <div id="text-preview-status-slot" className="file-preview__status-slot"></div>
-              </div>
-            )}
-
             {/* 预览内容 */}
             {currentPreviewer && (
               <div className="file-preview__content">
-                <Suspense fallback={
-                  <div className="file-browser__loading">
-                    <div className="file-browser__spinner"></div>
-                    <p>{t('filePreview.loadingPreview')}</p>
-                  </div>
-                }>
+                <Suspense fallback={null}>
                   <currentPreviewer.component 
                     file={fileInfo}
                     url={downloadUrl}
@@ -741,72 +654,11 @@ export default function FilePreview() {
               </div>
             )}
           </>
-        ) : null}
-      </div>
-
-      {/* 底部说明 (Readme) */}
-      {readme && !passwordRequired && (
-        <div className="file-browser__meta-card file-browser__meta-card--readme">
-          <div className="file-browser__meta-content">
-            {isHtmlContent(readme) ? (
-              <HtmlContentRenderer content={readme} />
-            ) : (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
-                components={{
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const lang = match?.[1]
-                    const code = String(children).replace(/\n$/, '')
-                    if (lang === 'mermaid') {
-                      return <MermaidChart chart={code} />
-                    }
-                    return <code className={className} {...props}>{children}</code>
-                  },
-                  p({ children }) {
-                    if (typeof children === 'string') {
-                      return <p>{processEmoji(children)}</p>
-                    }
-                    return <p>{children}</p>
-                  }
-                }}
-              >{readme}</ReactMarkdown>
-            )}
+        ) : fileInfo && !downloadUrl ? (
+          <div className="file-browser__loading">
+            <div className="file-browser__spinner"></div>
           </div>
-        </div>
-      )}
-
-      {/* 页面底部 */}
-      <div className="file-browser__page-footer">
-        <a 
-          href="https://github.com/ChuYao233/YaoList" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="file-browser__page-footer-link"
-        >
-          <span id="vara-container-preview" className="file-browser__vara-container"></span>
-        </a>
-        <span className="file-browser__page-footer-sep">|</span>
-        {localIsLoggedIn ? (
-          <a 
-            href="#" 
-            className="file-browser__page-footer-link"
-            onClick={(e) => { e.preventDefault(); setUserSettingsDialog(true) }}
-          >
-            {t('userSettings.title')}
-          </a>
-        ) : (
-          <a href="/login" className="file-browser__page-footer-link">{t('login.loginButton')}</a>
-        )}
-      </div>
-
-      {/* 用户设置侧边栏 */}
-      <UserSettingsSidebar 
-        visible={userSettingsDialog} 
-        onClose={() => setUserSettingsDialog(false)}
-        permissions={permissions}
-      />
-    </div>
+        ) : null}
+    </>
   )
 }

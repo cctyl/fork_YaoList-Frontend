@@ -501,7 +501,9 @@
     "delete": "Delete",
     "copyLink": "Copy Link",
     "copyDirectLink": "Copy Direct Link",
+    "createDirectLink": "Create Direct Link",
     "createShare": "Create Share",
+    "createShareBtn": "Create & Copy",
     "copyTo": "Copy to",
     "moveTo": "Move to",
     "extractTo": "Extract to",
@@ -576,7 +578,14 @@
     "ifFileExists": "If file already exists:",
     "autoRename": "Auto rename",
     "overwrite": "Overwrite",
-    "skip": "Skip"
+    "skip": "Skip",
+    "sharePassword": "Share Password",
+    "sharePasswordPlaceholder": "Leave empty for no password",
+    "expiresAt": "Expires At",
+    "expiresAtHint": "Leave empty for never expire",
+    "maxAccessCount": "Max Access Count",
+    "maxAccessCountHint": "Leave empty for unlimited",
+    "createAndCopy": "Create & Copy"
   },
   "drivers": {
     "title": "Driver Management",

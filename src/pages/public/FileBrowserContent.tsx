@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext } from 'react'
+import { useState, useEffect, useRef, useContext, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Vara from 'vara'
 import JSZip from 'jszip'
@@ -433,7 +433,62 @@ interface UserPermissions {
   is_admin: boolean
 }
 
-export default function FileBrowser() {
+// 图片画廊项组件 - 异步加载下载URL
+function GalleryItem({ file, currentPath, onClick, onContextMenu }: {
+  file: FileItem
+  currentPath: string
+  onClick: () => void
+  onContextMenu: (e: React.MouseEvent) => void
+}) {
+  const [imageUrl, setImageUrl] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    const fetchUrl = async () => {
+      try {
+        const filePath = currentPath ? `/${currentPath}/${file.name}` : `/${file.name}`
+        const response = await api.post('/api/fs/get_download_url', { path: filePath })
+        if (response.data.code === 200) {
+          setImageUrl(response.data.data.url)
+        } else {
+          setError(true)
+        }
+      } catch {
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUrl()
+  }, [file.name, currentPath])
+
+  return (
+    <div 
+      className="file-browser__gallery-item"
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
+      <div className="file-browser__gallery-image">
+        {loading && <div className="file-browser__gallery-loading"><Loader2 size={24} className="file-browser__spinning" /></div>}
+        {error && <div className="file-browser__gallery-error">⚠️</div>}
+        {!loading && !error && imageUrl && (
+          <img 
+            src={imageUrl}
+            alt={file.name}
+            loading="lazy"
+            onError={() => setError(true)}
+          />
+        )}
+      </div>
+      <div className="file-browser__gallery-name" title={file.name}>
+        {file.name}
+      </div>
+    </div>
+  )
+}
+
+export default function FileBrowserContent() {
   const { '*': pathParam } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
@@ -441,7 +496,7 @@ export default function FileBrowser() {
   
   // 使用 FileRouter 提供的共享上下文
   const shared = useContext(SharedContext)
-  const { siteTitle, siteIcon, darkMode, language, hasBackground, isLoggedIn, setIsLoggedIn } = shared
+  const { siteTitle, siteIcon, darkMode, language, hasBackground, isLoggedIn, setIsLoggedIn, setFloatingToolbar, setHeaderButtons, setPageState, setOnPasswordSubmit } = shared
   
   const [files, setFiles] = useState<FileItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -574,6 +629,8 @@ export default function FileBrowser() {
     const fullPath = currentPath ? `/${currentPath}` : '/'
     // 清除不在当前路径范围内的密码（退出保护区域时）
     cleanupPasswordsForPath(fullPath)
+    // 立即设置加载状态，确保显示加载动画
+    setPageState({ contentLoading: true })
     loadFiles(currentPath)
   }, [currentPath])
 
@@ -895,8 +952,7 @@ export default function FileBrowser() {
       if (response.data.code === 403) {
         setPasswordRequired(true)
         setFiles([])
-        setReadme('')
-        setHeader('')
+        // 不清空 header/readme，保持上一次的值，避免闪烁
         setLoading(false)
         return
       }
@@ -905,8 +961,7 @@ export default function FileBrowser() {
       if (response.data.code === 500 && response.data.error_type === 'DRIVER_ERROR') {
         setListError(response.data.message || '存储驱动错误')
         setFiles([])
-        setReadme('')
-        setHeader('')
+        // 不清空 header/readme，保持上一次的值，避免闪烁
         setLoading(false)
         return
       }
@@ -953,16 +1008,15 @@ export default function FileBrowser() {
     }
   }
   
-  // 处理密码提交
-  const handlePasswordSubmit = async () => {
+  // 处理密码提交（接受来自 FileRouter 的密码参数）
+  const handlePasswordSubmit = useCallback(async (password: string) => {
     const fullPath = currentPath ? `/${currentPath}` : '/'
-    setPasswordLoading(true)
-    setPasswordError(false)
+    setPageState({ passwordLoading: true, passwordError: false })
     
     try {
       const response = await api.post('/api/fs/list', {
         path: fullPath,
-        password: passwordInput,
+        password: password,
         page: 1,
         per_page: pagination.perPage,
         refresh: false
@@ -970,18 +1024,17 @@ export default function FileBrowser() {
       
       if (response.data.code === 403) {
         // 密码错误
-        setPasswordError(true)
+        setPageState({ passwordError: true, passwordLoading: false })
         toast.error(t('fileBrowser.passwordError') || '密码错误，请重试')
-        setPasswordLoading(false)
         return
       }
       
       // 密码正确，保存并加载
-      const newPasswords = { ...pathPassword, [fullPath]: passwordInput }
+      const newPasswords = { ...pathPassword, [fullPath]: password }
       setPathPassword(newPasswords)
       sessionStorage.setItem('pathPasswords', JSON.stringify(newPasswords))
       setPasswordRequired(false)
-      setPasswordInput('')
+      setPageState({ passwordRequired: false, passwordInput: '', passwordLoading: false })
       
       const data = response.data.data
       setFiles(data?.content || [])
@@ -995,12 +1048,16 @@ export default function FileBrowser() {
         fileCount: data?.file_count || 0
       })
     } catch (err) {
-      setPasswordError(true)
+      setPageState({ passwordError: true, passwordLoading: false })
       toast.error(t('fileBrowser.passwordError') || '密码错误，请重试')
-    } finally {
-      setPasswordLoading(false)
     }
-  }
+  }, [currentPath, pagination.perPage, pathPassword, setPageState, t, toast])
+
+  // 注册密码提交回调到 FileRouter
+  useEffect(() => {
+    setOnPasswordSubmit(handlePasswordSubmit)
+    return () => setOnPasswordSubmit(undefined)
+  }, [handlePasswordSubmit, setOnPasswordSubmit])
 
   const handleSort = (key: 'name' | 'size' | 'modified') => {
     const newDirection = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
@@ -1547,10 +1604,69 @@ export default function FileBrowser() {
   }
 
   // 刷新文件列表
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     loadFiles(currentPath)
     toast.success(t('fileBrowser.refreshSuccess'))
-  }
+  }, [currentPath, loadFiles, toast, t])
+
+  // 注册悬浮工具栏回调到 FileRouter
+  useEffect(() => {
+    setFloatingToolbar({
+      onRefresh: handleRefresh,
+      onNewFile: () => setNewFileDialog({ visible: true, name: '' }),
+      onNewFolder: () => setMkdirDialog({ visible: true, name: '' }),
+      onUpload: () => setUploadDialog(true),
+      selectionMode,
+      onToggleSelection: () => setSelectionMode(prev => !prev)
+    })
+  }, [handleRefresh, selectionMode, setFloatingToolbar])
+
+  // 同步加载状态到 FileRouter
+  useEffect(() => {
+    setPageState({ contentLoading: loading })
+  }, [loading, setPageState])
+
+  // 只在加载完成后同步元信息，避免加载过程中清空元信息卡片
+  useEffect(() => {
+    if (!loading) {
+      setPageState({ header, readme, passwordRequired })
+    }
+  }, [header, readme, passwordRequired, loading, setPageState])
+
+  // 检查是否有图片文件（用于显示视图切换按钮）
+  const hasImageFiles = files.some(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name))
+
+  // 注册 header 按钮（搜索和视图切换）到 FileRouter
+  useEffect(() => {
+    setHeaderButtons(
+      <>
+        {/* 搜索按钮 */}
+        {searchEnabled && (
+          <Tooltip text={t('search.placeholder')} position="bottom">
+            <button 
+              className="file-browser__header-btn"
+              onClick={openSearchModal}
+            >
+              <Search size={18} />
+            </button>
+          </Tooltip>
+        )}
+        {/* 视图切换按钮 - 只在有图片时显示 */}
+        {hasImageFiles && (
+          <Tooltip text={viewMode === 'list' ? (t('fileBrowser.galleryView') || '图片视图') : (t('fileBrowser.listView') || '列表视图')} position="bottom">
+            <button 
+              className="file-browser__header-btn"
+              onClick={() => setViewMode(viewMode === 'list' ? 'gallery' : 'list')}
+            >
+              {viewMode === 'list' ? <LayoutGrid size={18} /> : <List size={18} />}
+            </button>
+          </Tooltip>
+        )}
+      </>
+    )
+    // 组件卸载时清空 headerButtons
+    return () => setHeaderButtons(null)
+  }, [searchEnabled, hasImageFiles, viewMode, t, setHeaderButtons])
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '-'
@@ -1573,159 +1689,13 @@ export default function FileBrowser() {
     })
   }
 
-  const breadcrumbs = getBreadcrumbs()
+  // FileBrowserContent 只渲染 main-card 内部内容 + 悬浮工具栏 + 弹窗
+  // 公共部分（header、面包屑、meta-card、page-footer）由 FileRouter 处理
 
+  // 密码验证界面和加载动画由 FileRouter 渲染，这里不再渲染
   return (
-    <div className={`file-browser ${hasBackground ? 'file-browser--with-bg' : ''}`}>
-      <div className="file-browser__header">
-        <div className="file-browser__header-left">
-          <img src={siteIcon} alt={siteTitle} className="file-browser__logo" />
-          <h1 className="file-browser__site-title">{siteTitle}</h1>
-        </div>
-        <div className="file-browser__header-right">
-          {/* 搜索按钮 */}
-          {searchEnabled && (
-            <Tooltip text={t('search.placeholder')} position="bottom">
-              <button 
-                className="file-browser__header-btn"
-                onClick={openSearchModal}
-              >
-                <Search size={18} />
-              </button>
-            </Tooltip>
-          )}
-          <div className="file-browser__lang-switch">
-            <Tooltip text={t('fileBrowser.switchLanguage')} position="bottom">
-              <button 
-                className="file-browser__header-btn"
-                onClick={() => setShowLangMenu(!showLangMenu)}
-              >
-                <Languages size={18} />
-              </button>
-            </Tooltip>
-            {showLangMenu && (
-              <div className="file-browser__lang-menu">
-                <button 
-                  className={`file-browser__lang-item ${language === 'zh-CN' ? 'active' : ''}`}
-                  onClick={() => toggleLanguage('zh-CN')}
-                >
-                  简体中文
-                </button>
-                <button 
-                  className={`file-browser__lang-item ${language === 'en-US' ? 'active' : ''}`}
-                  onClick={() => toggleLanguage('en-US')}
-                >
-                  English
-                </button>
-              </div>
-            )}
-          </div>
-          <Tooltip text={darkMode ? t('fileBrowser.switchToLight') : t('fileBrowser.switchToDark')} position="bottom">
-            <button 
-              className="file-browser__header-btn"
-              onClick={() => shared.setDarkMode(!darkMode)}
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </Tooltip>
-        </div>
-      </div>
-      
-      {/* 顶部说明 (Header) - 在面包屑卡片上方 */}
-      {header && !passwordRequired && (
-        <div className="file-browser__meta-card file-browser__meta-card--header">
-          <div className="file-browser__meta-content">
-            {isHtmlContent(header) ? (
-              <HtmlContentRenderer content={header} className="file-browser__html-content" />
-            ) : (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
-                components={{
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const lang = match?.[1]
-                    const code = String(children).replace(/\n$/, '')
-                    if (lang === 'mermaid') {
-                      return <MermaidChart chart={code} />
-                    }
-                    return <code className={className} {...props}>{children}</code>
-                  },
-                  p({ children }) {
-                    if (typeof children === 'string') {
-                      return <p>{processEmoji(children)}</p>
-                    }
-                    return <p>{children}</p>
-                  }
-                }}
-              >{header}</ReactMarkdown>
-            )}
-          </div>
-        </div>
-      )}
-
-
-      <div className="file-browser__breadcrumb-card">
-        {breadcrumbs.map((crumb, index) => (
-          <div key={crumb.path} className="file-browser__breadcrumb-item">
-            {index === 0 ? (
-              <Link to="/" className="file-browser__breadcrumb-link">
-                <Home size={18} />
-                <span>{crumb.name}</span>
-              </Link>
-            ) : (
-              <>
-                <ChevronRight size={18} className="file-browser__breadcrumb-separator" />
-                <Link 
-                  to={`/${crumb.path}`}
-                  className={`file-browser__breadcrumb-link ${index === breadcrumbs.length - 1 ? 'file-browser__breadcrumb-link--current' : ''}`}
-                >
-                  {crumb.name}
-                </Link>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="file-browser__main-card">
-        {/* 密码验证界面 */}
-        {passwordRequired ? (
-          <div className={`file-browser__password ${passwordError ? 'shake' : ''}`}>
-            <div className="file-browser__password-icon">
-              <Lock size={48} />
-            </div>
-            <h2>{t('fileBrowser.passwordRequired') || '需要密码'}</h2>
-            <p>{t('fileBrowser.passwordHint') || '此目录需要密码才能访问'}</p>
-            <div className="file-browser__password-form">
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={(e) => {
-                  setPasswordInput(e.target.value)
-                  setPasswordError(false)
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && !passwordLoading && handlePasswordSubmit()}
-                placeholder={t('fileBrowser.enterPassword') || '请输入密码'}
-                className={passwordError ? 'error' : ''}
-                autoFocus
-                disabled={passwordLoading}
-              />
-              <button onClick={handlePasswordSubmit} disabled={passwordLoading || !passwordInput}>
-                {passwordLoading ? (
-                  <span className="file-browser__password-loading"></span>
-                ) : (
-                  t('fileBrowser.confirm') || '确认'
-                )}
-              </button>
-            </div>
-          </div>
-        ) : loading ? (
-          <div className="file-browser__loading">
-            <div className="file-browser__spinner"></div>
-            <p>{t('fileBrowser.loading')}</p>
-          </div>
-        ) : listError ? (
+    <>
+      {listError ? (
           <div className="file-browser__error">
             <AlertTriangle size={48} className="file-browser__error-icon" />
             <div className="file-browser__error-title">{t('fileBrowser.driverError', '存储驱动故障')}</div>
@@ -1787,29 +1757,14 @@ export default function FileBrowser() {
             {/* 图片瀑布流视图 */}
             {viewMode === 'gallery' && (
               <div className="file-browser__gallery">
-                {files.filter(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name)).map((file, index) => (
-                  <div 
+                {files.filter(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico)$/i.test(f.name)).map((file, index) => (
+                  <GalleryItem 
                     key={file.name || `gallery-${index}`}
-                    className="file-browser__gallery-item"
+                    file={file}
+                    currentPath={currentPath}
                     onClick={() => handleNavigate(currentPath ? `${currentPath}/${file.name}` : file.name)}
                     onContextMenu={(e) => handleContextMenu(e, file)}
-                  >
-                    <div className="file-browser__gallery-image">
-                      <img 
-                        src={`/api/fs/preview?path=${encodeURIComponent((currentPath ? `/${currentPath}/${file.name}` : `/${file.name}`))}`}
-                        alt={file.name}
-                        loading="lazy"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                          target.parentElement?.classList.add('file-browser__gallery-image--error')
-                        }}
-                      />
-                    </div>
-                    <div className="file-browser__gallery-name" title={file.name}>
-                      {file.name}
-                    </div>
-                  </div>
+                  />
                 ))}
               </div>
             )}
@@ -1902,28 +1857,6 @@ export default function FileBrowser() {
                   return parts.join(' ') || t('fileBrowser.emptyFolder')
                 })()}
               </div>
-
-              {/* 视图切换按钮 - 只在有图片时显示 */}
-              {files.some(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name)) && (
-                <div className="file-browser__view-toggle">
-                  <Tooltip text={t('fileBrowser.listView') || '列表视图'} position="top">
-                    <button 
-                      className={`file-browser__view-toggle-btn ${viewMode === 'list' ? 'file-browser__view-toggle-btn--active' : ''}`}
-                      onClick={() => setViewMode('list')}
-                    >
-                      <List size={16} />
-                    </button>
-                  </Tooltip>
-                  <Tooltip text={t('fileBrowser.galleryView') || '图片视图'} position="top">
-                    <button 
-                      className={`file-browser__view-toggle-btn ${viewMode === 'gallery' ? 'file-browser__view-toggle-btn--active' : ''}`}
-                      onClick={() => setViewMode('gallery')}
-                    >
-                      <LayoutGrid size={16} />
-                    </button>
-                  </Tooltip>
-                </div>
-              )}
 
               {/* 页码导航 - 超过10项显示 */}
               {pagination.total > 10 && (
@@ -2386,100 +2319,6 @@ export default function FileBrowser() {
             )}
           </div>
         )}
-      </div>
-
-      {/* 底部说明 (Readme) - 在文件列表卡片下方 */}
-      {readme && !passwordRequired && (
-        <div className="file-browser__meta-card file-browser__meta-card--readme">
-          <div className="file-browser__meta-content">
-            {isHtmlContent(readme) ? (
-              <HtmlContentRenderer content={readme} className="file-browser__html-content" />
-            ) : (
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
-                components={{
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const lang = match?.[1]
-                    const code = String(children).replace(/\n$/, '')
-                    if (lang === 'mermaid') {
-                      return <MermaidChart chart={code} />
-                    }
-                    return <code className={className} {...props}>{children}</code>
-                  },
-                  p({ children }) {
-                    if (typeof children === 'string') {
-                      return <p>{processEmoji(children)}</p>
-                    }
-                    return <p>{children}</p>
-                  }
-                }}
-              >{readme}</ReactMarkdown>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 悬浮工具栏 - 竖向排版 */}
-      <div className="file-browser__floating-toolbar">
-        <Tooltip text={t('fileBrowser.refresh')} position="left">
-          <button 
-            className="file-browser__toolbar-btn file-browser__toolbar-btn--refresh" 
-            onClick={handleRefresh}
-          >
-            <RefreshCw size={20} />
-          </button>
-        </Tooltip>
-        
-        {permissions?.create_upload && (
-          <>
-            <Tooltip text={t('fileBrowser.newFile')} position="left">
-              <button 
-                className="file-browser__toolbar-btn file-browser__toolbar-btn--newfile"
-                onClick={() => setNewFileDialog({ visible: true, name: '' })}
-              >
-                <FilePlus size={20} />
-              </button>
-            </Tooltip>
-            <Tooltip text={t('fileBrowser.newFolder')} position="left">
-              <button 
-                className="file-browser__toolbar-btn file-browser__toolbar-btn--newfolder"
-                onClick={() => setMkdirDialog({ visible: true, name: '' })}
-              >
-                <FolderPlus size={20} />
-              </button>
-            </Tooltip>
-            <Tooltip text={t('fileBrowser.upload')} position="left">
-              <button 
-                className="file-browser__toolbar-btn file-browser__toolbar-btn--upload"
-                onClick={() => setUploadDialog(true)}
-              >
-                <Upload size={20} />
-              </button>
-            </Tooltip>
-          </>
-        )}
-        
-        <Tooltip text={selectionMode ? t('fileBrowser.cancelMultiSelect') : t('fileBrowser.multiSelect')} position="left">
-          <button 
-            className="file-browser__toolbar-btn file-browser__toolbar-btn--select"
-            onClick={() => setSelectionMode(!selectionMode)}
-          >
-            <CheckSquare size={20} />
-          </button>
-        </Tooltip>
-        
-        <Tooltip text={t('fileBrowser.taskList')} position="left">
-          <button 
-            className="file-browser__toolbar-btn file-browser__toolbar-btn--tasks"
-            onClick={() => setTaskListDialog(true)}
-          >
-            <ListTodo size={20} />
-          </button>
-        </Tooltip>
-
-      </div>
 
       {/* 选择操作栏 - 底部居中 */}
       {selectionMode && selectedFiles.length > 0 && (
@@ -3154,36 +2993,6 @@ export default function FileBrowser() {
         document.body
       )}
 
-      {/* 用户设置侧边栏 */}
-      <UserSettingsSidebar 
-        visible={userSettingsDialog} 
-        onClose={() => setUserSettingsDialog(false)}
-        permissions={permissions}
-      />
-
-      {/* 页面底部 */}
-      <div className="file-browser__page-footer">
-        <a 
-          href="https://github.com/ChuYao233/YaoList" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="file-browser__page-footer-link"
-        >
-          <span id="vara-container" className="file-browser__vara-container"></span>
-        </a>
-        <span className="file-browser__page-footer-sep">|</span>
-        {isLoggedIn ? (
-          <a 
-            href="#" 
-            className="file-browser__page-footer-link"
-            onClick={(e) => { e.preventDefault(); setUserSettingsDialog(true) }}
-          >
-            {t('userSettings.title')}
-          </a>
-        ) : (
-          <a href="/login" className="file-browser__page-footer-link">{t('login.loginButton')}</a>
-        )}
-      </div>
-    </div>
+    </>
   )
 }

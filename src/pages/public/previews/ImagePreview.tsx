@@ -346,7 +346,7 @@ export default function ImagePreview({ file, url }: ImagePreviewProps) {
               src={url}
               alt={file.name}
               className="preview__image"
-              style={{ opacity: loading || error ? 0 : (playingLive ? 0 : 1), cursor: 'zoom-in' }}
+              style={{ display: loading || error ? 'none' : 'block', opacity: playingLive ? 0 : 1, cursor: 'zoom-in' }}
               onLoad={() => setLoading(false)}
               onError={() => { setLoading(false); setError(t('preview.imageLoadFailed')) }}
               draggable={false}

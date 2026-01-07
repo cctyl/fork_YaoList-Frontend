@@ -934,7 +934,7 @@
       position: relative;
       overflow: hidden;
       background: var(--bg-tertiary);
-      min-height: 300px;
+      min-height: 400px;
       
       .glass-enabled & {
         background: transparent;
@@ -1477,16 +1477,50 @@
 
     .preview__audio-info {
       text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .preview__audio-title-wrapper {
+      overflow: hidden;
+      width: 100%;
+
+      &:has(.preview__audio-title--scroll) {
+        mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+      }
     }
 
     .preview__audio-title {
       font-size: 20px;
       font-weight: 600;
       margin: 0 0 8px;
-      max-width: 400px;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: center;
+    }
+
+    .preview__audio-title-text {
+      display: inline-block;
+    }
+
+    // 只有长文件名才滚动
+    .preview__audio-title--scroll .preview__audio-title-text {
+      padding-right: 80px;
+      animation: audioMarquee 15s linear infinite;
+
+      &::after {
+        content: attr(data-text);
+        padding-left: 80px;
+      }
+    }
+
+    @keyframes audioMarquee {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
     }
 
     .preview__audio-count {
@@ -2292,6 +2326,18 @@
 
     .preview__audio-info {
       text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .preview__audio-title-wrapper {
+      overflow: hidden;
+      width: 100%;
+
+      &:has(.preview__audio-title--scroll) {
+        mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+      }
     }
 
     .preview__audio-title-row {
@@ -2306,10 +2352,22 @@
       font-weight: 600;
       color: var(--text-primary);
       margin: 0;
-      max-width: 400px;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: center;
+    }
+
+    .preview__audio-title-text {
+      display: inline-block;
+    }
+
+    .preview__audio-title--scroll .preview__audio-title-text {
+      padding-right: 80px;
+      animation: audioMarquee 15s linear infinite;
+
+      &::after {
+        content: attr(data-text);
+        padding-left: 80px;
+      }
     }
 
     .preview__audio-info-btn {

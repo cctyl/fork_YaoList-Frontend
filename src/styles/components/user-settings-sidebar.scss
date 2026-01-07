@@ -12,7 +12,7 @@
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.2s ease;
+  animation: slideIn 0.2s ease forwards;
 
   [data-theme="dark"] & {
     background: rgba(30, 30, 30, 0.8);
@@ -26,6 +26,19 @@
     to {
       transform: translateX(0);
     }
+  }
+
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  &--closing {
+    animation: slideOut 0.2s ease forwards;
   }
 
   &__header {
@@ -665,5 +678,79 @@
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
+  }
+
+  // 移动端适配
+  @media (max-width: 480px) {
+    width: 100%;
+
+    &__header {
+      padding: 14px 16px;
+    }
+
+    &__content {
+      padding: 12px;
+    }
+
+    &__card {
+      border-radius: 12px;
+    }
+
+    &__avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    &__avatar-overlay {
+      span {
+        font-size: 10px;
+      }
+    }
+
+    &__info-name {
+      font-size: 16px;
+    }
+
+    &__info-detail {
+      font-size: 12px;
+    }
+
+    &__form-row {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    &__form-group {
+      min-width: 100%;
+    }
+
+    &__input {
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    &__btn {
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+
+    &__stats {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    &__stat-item {
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 10px 12px;
+    }
+
+    &__stat-value {
+      font-size: 16px;
+    }
+
+    &__menu-item {
+      padding: 12px 14px;
+    }
   }
 }

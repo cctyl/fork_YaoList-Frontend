@@ -65,45 +65,50 @@ export default function RawPreview({ file, url }: RawPreviewProps) {
       setProgress(0)
 
       try {
-        // 下载 RAW 文件
+        // 首先尝试 Range 请求，只下载前 8MB（嵌入的 JPEG 通常在文件头部）
+        // 这可以大大加快大文件的预览速度
+        const INITIAL_CHUNK_SIZE = 8 * 1024 * 1024 // 8MB
+        
         setProgress(10)
-        const response = await fetch(url)
-        if (!response.ok) throw new Error('Failed to fetch RAW file')
         
-        const contentLength = response.headers.get('content-length')
-        const total = contentLength ? parseInt(contentLength, 10) : 0
+        // 尝试 Range 请求
+        let response = await fetch(url, {
+          headers: { 'Range': `bytes=0-${INITIAL_CHUNK_SIZE - 1}` }
+        })
         
-        const reader = response.body?.getReader()
-        if (!reader) throw new Error('Failed to read response')
-
-        const chunks: Uint8Array[] = []
-        let received = 0
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          chunks.push(value)
-          received += value.length
-          if (total > 0) {
-            setProgress(10 + Math.round((received / total) * 40))
-          }
+        // 如果服务器不支持 Range 请求，回退到完整下载
+        const supportsRange = response.status === 206
+        
+        if (!supportsRange) {
+          response = await fetch(url)
+        }
+        
+        if (!response.ok && response.status !== 206) {
+          throw new Error('Failed to fetch RAW file')
         }
 
+        setProgress(30)
+
+        const buffer = new Uint8Array(await response.arrayBuffer())
+        
         if (cancelled) return
-
-        // 合并所有块
-        const buffer = new Uint8Array(received)
-        let position = 0
-        for (const chunk of chunks) {
-          buffer.set(chunk, position)
-          position += chunk.length
-        }
-
         setProgress(60)
 
         // 尝试从 RAW 文件中提取嵌入的 JPEG 缩略图
-        // 大多数 RAW 文件都嵌入了全尺寸或大尺寸的 JPEG 预览
-        const jpegData = extractEmbeddedJpeg(buffer)
+        let jpegData = extractEmbeddedJpeg(buffer)
+        
+        // 如果在前 8MB 没找到完整的 JPEG，且支持 Range 请求，尝试下载更多
+        if (!jpegData && supportsRange) {
+          setProgress(70)
+          // 下载完整文件
+          const fullResponse = await fetch(url)
+          if (fullResponse.ok) {
+            const fullBuffer = new Uint8Array(await fullResponse.arrayBuffer())
+            if (!cancelled) {
+              jpegData = extractEmbeddedJpeg(fullBuffer)
+            }
+          }
+        }
         
         if (jpegData && !cancelled) {
           setProgress(90)
@@ -115,8 +120,7 @@ export default function RawPreview({ file, url }: RawPreviewProps) {
           return
         }
 
-        // 如果没有找到嵌入的 JPEG，尝试使用 libraw.js（如果可用）
-        // 或显示无法预览的消息
+        // 如果没有找到嵌入的 JPEG
         if (!cancelled) {
           setError(t('preview.rawExtractFailed'))
           setLoading(false)

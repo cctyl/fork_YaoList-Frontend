@@ -97,7 +97,7 @@ export default function BasicSettings() {
       if (response.data?.data) {
         setVersionInfo({
           backend_version: response.data.data.backend_version || '',
-          frontend_version: '1.0.0',
+          frontend_version: '1.0.2',
           build_time: formatBuildTime(response.data.data.build_time)
         })
       }

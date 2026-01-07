@@ -394,7 +394,11 @@ export default function AudioPreview({ url, file, siblings = [], onNavigate }: A
 
       {/* 歌曲信息 */}
       <div className="preview__audio-info">
-        <h3 className="preview__audio-title">{displayName}</h3>
+        <div className="preview__audio-title-wrapper">
+          <h3 className={`preview__audio-title ${displayName.length > 25 ? 'preview__audio-title--scroll' : ''}`}>
+            <span className="preview__audio-title-text" data-text={displayName}>{displayName}</span>
+          </h3>
+        </div>
         {artistName && <p className="preview__audio-artist">{artistName}</p>}
         {siblings.length > 1 && (
           <span className="preview__audio-count">{currentIndex + 1} / {siblings.length}</span>

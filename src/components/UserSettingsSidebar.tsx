@@ -63,6 +63,8 @@ export default function UserSettingsSidebar({ visible, onClose, permissions }: U
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isClosing, setIsClosing] = useState(false) // 关闭动画状态
+  const [shouldRender, setShouldRender] = useState(false) // 是否应该渲染
   
   // 编辑表单状态
   const [newEmail, setNewEmail] = useState('')
@@ -86,6 +88,21 @@ export default function UserSettingsSidebar({ visible, onClose, permissions }: U
   const [twoFAQrCode, setTwoFAQrCode] = useState('')
   const [totpCode, setTotpCode] = useState('')
   const [setting2FA, setSetting2FA] = useState(false)
+
+  // 处理打开/关闭动画
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true)
+      setIsClosing(false)
+    } else if (shouldRender) {
+      setIsClosing(true)
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+        setIsClosing(false)
+      }, 200) // 与动画时间一致
+      return () => clearTimeout(timer)
+    }
+  }, [visible])
 
   useEffect(() => {
     if (visible) {
@@ -424,10 +441,10 @@ export default function UserSettingsSidebar({ visible, onClose, permissions }: U
     is_admin: t('userSettings.permissions.isAdmin')
   }
 
-  if (!visible) return null
+  if (!shouldRender) return null
 
   return (
-    <div className="user-settings-sidebar">
+    <div className={`user-settings-sidebar ${isClosing ? 'user-settings-sidebar--closing' : ''}`}>
       <div className="user-settings-sidebar__header">
         <h3>{t('userSettings.title')}</h3>
         <button className="user-settings-sidebar__close" onClick={onClose}>

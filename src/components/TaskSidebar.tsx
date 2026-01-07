@@ -37,6 +37,25 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
   const { t } = useTranslation()
   const [tasks, setTasks] = useState<Task[]>([])
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isFetchingRef = useRef(false)
+  const [showExactTime, setShowExactTime] = useState<Record<string, boolean>>({}) // 记录哪些任务显示具体时间
+  const [isClosing, setIsClosing] = useState(false) // 关闭动画状态
+  const [shouldRender, setShouldRender] = useState(false) // 是否应该渲染
+
+  // 处理打开/关闭动画
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true)
+      setIsClosing(false)
+    } else if (shouldRender) {
+      setIsClosing(true)
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+        setIsClosing(false)
+      }, 200) // 与动画时间一致
+      return () => clearTimeout(timer)
+    }
+  }, [visible])
 
   // 格式化文件大小
   const formatSize = (bytes: number) => {
@@ -61,8 +80,8 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
     return `${hours}h ${mins}m`
   }
 
-  // 格式化完成时间
-  const formatFinishedTime = (dateStr?: string) => {
+  // 格式化完成时间（相对时间）
+  const formatFinishedTimeRelative = (dateStr?: string) => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
     const now = new Date()
@@ -77,28 +96,51 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
     return date.toLocaleDateString(lang, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
-  // 获取任务描述文本
-  const getTaskDescription = (task: Task) => {
+  // 格式化完成时间（具体时间）
+  const formatFinishedTimeExact = (dateStr?: string) => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    const lang = localStorage.getItem('language') || 'zh-CN'
+    return date.toLocaleString(lang, { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
+
+  // 切换时间显示模式
+  const toggleTimeDisplay = (taskId: string) => {
+    setShowExactTime(prev => ({ ...prev, [taskId]: !prev[taskId] }))
+  }
+
+  // 获取任务描述文本（包含目录路径）
+  const getTaskDescription = (task: Task, showFullPath: boolean = false) => {
     const targetDir = task.target_path || task.source_path || '/'
-    const shortDir = targetDir.length > 20 ? '...' + targetDir.slice(-20) : targetDir
+    const shortDir = showFullPath ? targetDir : (targetDir.length > 15 ? '...' + targetDir.slice(-15) : targetDir)
     
     switch (task.task_type) {
       case 'upload':
-        if (task.total_files > 1) {
-          return t('taskSidebar.uploadedFilesTo', { count: task.total_files, dir: shortDir })
-        }
-        return t('taskSidebar.uploadedTo', { dir: shortDir })
+        return t('taskSidebar.uploadTo', { name: task.name, dir: shortDir })
       case 'download':
-        return t('taskSidebar.downloadedFiles', { count: task.total_files })
+        return t('taskSidebar.downloadFrom', { name: task.name, dir: shortDir })
       case 'copy':
-        return t('taskSidebar.copiedFilesTo', { count: task.total_files, dir: shortDir })
+        return t('taskSidebar.copyTo', { name: task.name, dir: shortDir })
       case 'move':
-        return t('taskSidebar.movedFilesTo', { count: task.total_files, dir: shortDir })
+        return t('taskSidebar.moveTo', { name: task.name, dir: shortDir })
       case 'delete':
-        return t('taskSidebar.deletedFiles', { count: task.total_files })
+        return t('taskSidebar.deleteFrom', { name: task.name, dir: shortDir })
+      case 'extract':
+        return t('taskSidebar.extractTo', { name: task.name, dir: shortDir })
       default:
         return task.name
     }
+  }
+
+  // 获取目标路径
+  const getTargetPath = (task: Task) => {
+    return task.target_path || task.source_path || '/'
   }
 
   // 获取任务图标
@@ -171,6 +213,8 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
 
   // 轮询获取任务列表
   const fetchTasks = async () => {
+    if (isFetchingRef.current) return
+    isFetchingRef.current = true
     try {
       const res = await fetch('/api/tasks', { credentials: 'include' })
       if (res.ok) {
@@ -181,6 +225,8 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
       }
     } catch (e) {
       console.error('Failed to fetch tasks:', e)
+    } finally {
+      isFetchingRef.current = false
     }
   }
 
@@ -206,10 +252,8 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
     }
     
     return () => {
-      // 只在非alwaysConnect模式下停止轮询
-      if (!alwaysConnect) {
-        stopPolling()
-      }
+      // 始终在卸载或依赖变化时清理，避免残留多条定时器
+      stopPolling()
     }
   }, [visible, alwaysConnect])
 
@@ -297,10 +341,10 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
   const interruptedTasks = tasks.filter(t => t.status === 'interrupted')
   const completedTasks = tasks.filter(t => t.status === 'completed' || t.status === 'failed' || t.status === 'cancelled')
 
-  if (!visible) return null
+  if (!shouldRender) return null
 
   return (
-    <div className="task-sidebar">
+    <div className={`task-sidebar ${isClosing ? 'task-sidebar--closing' : ''}`}>
       <div className="task-sidebar__header">
         <h3>{t('fileBrowser.taskList')}</h3>
         <button className="task-sidebar__close" onClick={onClose}>
@@ -321,8 +365,13 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
                   <div className="task-sidebar__item-icon">
                     {getTaskIcon(task.task_type)}
                   </div>
-                  <div className="task-sidebar__item-name" title={task.name}>
-                    {task.name}
+                  <div className="task-sidebar__item-info-wrapper">
+                    <div className="task-sidebar__item-name" title={task.name}>
+                      {task.name}
+                    </div>
+                    <div className="task-sidebar__item-path" title={getTargetPath(task)}>
+                      → {getTargetPath(task).length > 25 ? '...' + getTargetPath(task).slice(-25) : getTargetPath(task)}
+                    </div>
                   </div>
                   {(task.status === 'running' || task.status === 'paused') && (
                     <div className="task-sidebar__item-controls">
@@ -413,8 +462,13 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
                   <div className="task-sidebar__item-icon">
                     {getTaskIcon(task.task_type)}
                   </div>
-                  <div className="task-sidebar__item-name" title={task.name}>
-                    {task.name}
+                  <div className="task-sidebar__item-info-wrapper">
+                    <div className="task-sidebar__item-name" title={task.name}>
+                      {task.name}
+                    </div>
+                    <div className="task-sidebar__item-path" title={getTargetPath(task)}>
+                      → {getTargetPath(task).length > 25 ? '...' + getTargetPath(task).slice(-25) : getTargetPath(task)}
+                    </div>
                   </div>
                   {getStatusIcon(task.status)}
                 </div>
@@ -484,19 +538,28 @@ export default function TaskSidebar({ visible, onClose, alwaysConnect = false, o
                   <div className="task-sidebar__item-icon">
                     {getTaskIcon(task.task_type)}
                   </div>
-                  <div className="task-sidebar__item-name" title={task.target_path || task.source_path}>
-                    {task.status === 'completed' ? getTaskDescription(task) : task.name}
+                  <div className="task-sidebar__item-info-wrapper">
+                    <div className="task-sidebar__item-name" title={task.name}>
+                      {task.name}
+                    </div>
+                    <div className="task-sidebar__item-path" title={getTargetPath(task)}>
+                      → {getTargetPath(task).length > 25 ? '...' + getTargetPath(task).slice(-25) : getTargetPath(task)}
+                    </div>
                   </div>
                   {getStatusIcon(task.status)}
                 </div>
-                {task.status === 'completed' && (
-                  <div className="task-sidebar__item-detail">
-                    <span className="task-sidebar__item-size">
-                      {task.task_type === 'extract' ? t('taskSidebar.items', { count: task.total_files }) : formatSize(task.total_size)}
-                    </span>
-                    <span className="task-sidebar__item-time">{formatFinishedTime(task.finished_at)}</span>
-                  </div>
-                )}
+                <div className="task-sidebar__item-detail">
+                  <span className="task-sidebar__item-size">
+                    {task.task_type === 'extract' ? t('taskSidebar.items', { count: task.total_files }) : formatSize(task.total_size)}
+                  </span>
+                  <span 
+                    className="task-sidebar__item-time task-sidebar__item-time--clickable"
+                    onClick={() => toggleTimeDisplay(task.id)}
+                    title={showExactTime[task.id] ? t('taskSidebar.clickForRelative') : t('taskSidebar.clickForExact')}
+                  >
+                    {showExactTime[task.id] ? formatFinishedTimeExact(task.finished_at) : formatFinishedTimeRelative(task.finished_at)}
+                  </span>
+                </div>
                 {task.error && (
                   <div className="task-sidebar__item-error" title={task.error}>
                     {task.error}

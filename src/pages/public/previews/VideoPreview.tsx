@@ -27,6 +27,14 @@ export default function VideoPreview({ file, url, siblings = [] }: VideoPreviewP
     const idx = siblings.findIndex(s => s.name === file.name)
     return idx >= 0 ? idx : 0
   })
+
+  // 当 file 或 siblings 变化时，更新 currentIndex
+  useEffect(() => {
+    const idx = siblings.findIndex(s => s.name === file.name)
+    if (idx >= 0) {
+      setCurrentIndex(idx)
+    }
+  }, [file.name, siblings])
   
   // 当前播放的 URL
   const currentUrl = siblings.length > 0 && currentIndex >= 0 

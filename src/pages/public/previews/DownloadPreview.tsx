@@ -607,6 +607,19 @@ export default function DownloadPreview({ file, url }: DownloadPreviewProps) {
   const [showAudioInfoModal, setShowAudioInfoModal] = useState(false)
   const [audioMeta, setAudioMeta] = useState<AudioMetadata | null>(null)
   const [loadingAudioMeta, setLoadingAudioMeta] = useState(false)
+  // 直链弹窗
+  const [directLinkDialog, setDirectLinkDialog] = useState<{
+    visible: boolean
+    expiresAt: string
+    maxAccessCount: string
+  }>({ visible: false, expiresAt: '', maxAccessCount: '' })
+  // 分享弹窗
+  const [shareDialog, setShareDialog] = useState<{
+    visible: boolean
+    expiresAt: string
+    maxAccessCount: string
+    password: string
+  }>({ visible: false, expiresAt: '', maxAccessCount: '', password: '' })
 
   const fileType = getFileType(file.name)
   const isEncryptedFile = isEncryptedAudio(file.name)
@@ -844,12 +857,20 @@ export default function DownloadPreview({ file, url }: DownloadPreviewProps) {
     if (url) window.open(url, '_blank')
   }
 
-  // 复制直链 / Copy direct link
-  const copyDirectLink = async () => {
+  // 打开直链弹窗
+  const openDirectLinkDialog = () => {
+    setDirectLinkDialog({ visible: true, expiresAt: '', maxAccessCount: '' })
+  }
+
+  // 创建直链
+  const handleCreateDirectLink = async () => {
     try {
-      const res = await api.post('/api/fs/get_direct_link', { path: file.path })
+      const res = await api.post('/api/fs/get_direct_link', { 
+        path: file.path,
+        expires_at: directLinkDialog.expiresAt || null,
+        max_access_count: directLinkDialog.maxAccessCount ? parseInt(directLinkDialog.maxAccessCount) : null
+      })
       if (res.data.code === 200 && res.data.data?.url) {
-        // Use URL directly from backend / 直接使用后端返回的URL
         await navigator.clipboard.writeText(res.data.data.url)
         toast.success(t('filePreview.linkCopied'))
       } else {
@@ -858,11 +879,34 @@ export default function DownloadPreview({ file, url }: DownloadPreviewProps) {
     } catch {
       toast.error(t('filePreview.copyFailed'))
     }
+    setDirectLinkDialog({ visible: false, expiresAt: '', maxAccessCount: '' })
   }
 
-  // 分享
+  // 打开分享弹窗
   const handleShare = () => {
-    toast.info(t('filePreview.shareComingSoon'))
+    setShareDialog({ visible: true, expiresAt: '', maxAccessCount: '', password: '' })
+  }
+
+  // 创建分享
+  const handleCreateShare = async () => {
+    try {
+      const response = await api.post('/api/shares', { 
+        path: file.path,
+        expires_at: shareDialog.expiresAt || null,
+        max_access_count: shareDialog.maxAccessCount ? parseInt(shareDialog.maxAccessCount) : null,
+        password: shareDialog.password || null
+      })
+      if (response.data.code === 200) {
+        const url = window.location.origin + response.data.data.url
+        await navigator.clipboard.writeText(url)
+        toast.success(t('fileBrowser.shareCreated'))
+      } else {
+        toast.error(response.data.message || t('fileBrowser.operationFailed'))
+      }
+    } catch {
+      toast.error(t('fileBrowser.operationFailed'))
+    }
+    setShareDialog({ visible: false, expiresAt: '', maxAccessCount: '', password: '' })
   }
 
   const FileIcon = getFileTypeIcon(file.name)
@@ -1179,7 +1223,7 @@ export default function DownloadPreview({ file, url }: DownloadPreviewProps) {
           <span>{t('filePreview.download')}</span>
         </button>
         {permissions?.allow_direct_link && (
-          <button className="download-preview__btn" onClick={copyDirectLink}>
+          <button className="download-preview__btn" onClick={openDirectLinkDialog}>
             <Link2 size={18} />
             <span>{t('filePreview.copyLink')}</span>
           </button>
@@ -1581,6 +1625,126 @@ export default function DownloadPreview({ file, url }: DownloadPreviewProps) {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 直链弹窗 */}
+      {directLinkDialog.visible && createPortal(
+        <div className="file-browser__modal-overlay" onClick={() => setDirectLinkDialog({ visible: false, expiresAt: '', maxAccessCount: '' })}>
+          <div className="file-browser__direct-link-dialog" onClick={e => e.stopPropagation()}>
+            <div className="file-browser__direct-link-dialog-header">
+              <h3>{t('fileBrowser.createDirectLink')}</h3>
+              <button onClick={() => setDirectLinkDialog({ visible: false, expiresAt: '', maxAccessCount: '' })}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="file-browser__direct-link-dialog-body">
+              <p className="file-browser__direct-link-dialog-filename">
+                <Link2 size={16} />
+                {file.name}
+              </p>
+              <div className="file-browser__direct-link-dialog-field">
+                <label>{t('fileBrowser.expiresAt')}</label>
+                <input
+                  type="datetime-local"
+                  value={directLinkDialog.expiresAt}
+                  onChange={e => setDirectLinkDialog(prev => ({ ...prev, expiresAt: e.target.value }))}
+                />
+                <span className="file-browser__direct-link-dialog-hint">{t('fileBrowser.expiresAtHint')}</span>
+              </div>
+              <div className="file-browser__direct-link-dialog-field">
+                <label>{t('fileBrowser.maxAccessCount')}</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="∞"
+                  value={directLinkDialog.maxAccessCount}
+                  onChange={e => setDirectLinkDialog(prev => ({ ...prev, maxAccessCount: e.target.value }))}
+                />
+                <span className="file-browser__direct-link-dialog-hint">{t('fileBrowser.maxAccessCountHint')}</span>
+              </div>
+            </div>
+            <div className="file-browser__direct-link-dialog-actions">
+              <button 
+                className="file-browser__direct-link-dialog-btn file-browser__direct-link-dialog-btn--cancel"
+                onClick={() => setDirectLinkDialog({ visible: false, expiresAt: '', maxAccessCount: '' })}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                className="file-browser__direct-link-dialog-btn file-browser__direct-link-dialog-btn--create"
+                onClick={handleCreateDirectLink}
+              >
+                {t('fileBrowser.copyDirectLink')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 分享弹窗 */}
+      {shareDialog.visible && createPortal(
+        <div className="file-browser__modal-overlay" onClick={() => setShareDialog({ visible: false, expiresAt: '', maxAccessCount: '', password: '' })}>
+          <div className="file-browser__direct-link-dialog" onClick={e => e.stopPropagation()}>
+            <div className="file-browser__direct-link-dialog-header">
+              <h3>{t('fileBrowser.createShare')}</h3>
+              <button onClick={() => setShareDialog({ visible: false, expiresAt: '', maxAccessCount: '', password: '' })}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="file-browser__direct-link-dialog-body">
+              <p className="file-browser__direct-link-dialog-filename">
+                <Share2 size={16} />
+                {file.name}
+              </p>
+              <div className="file-browser__direct-link-dialog-field">
+                <label>{t('fileBrowser.sharePassword')}</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder={t('fileBrowser.sharePasswordPlaceholder')}
+                  value={shareDialog.password}
+                  onChange={e => setShareDialog(prev => ({ ...prev, password: e.target.value }))}
+                />
+              </div>
+              <div className="file-browser__direct-link-dialog-field">
+                <label>{t('fileBrowser.expiresAt')}</label>
+                <input
+                  type="datetime-local"
+                  value={shareDialog.expiresAt}
+                  onChange={e => setShareDialog(prev => ({ ...prev, expiresAt: e.target.value }))}
+                />
+                <span className="file-browser__direct-link-dialog-hint">{t('fileBrowser.expiresAtHint')}</span>
+              </div>
+              <div className="file-browser__direct-link-dialog-field">
+                <label>{t('fileBrowser.maxAccessCount')}</label>
+                <input
+                  type="number"
+                  min="1"
+                  placeholder="∞"
+                  value={shareDialog.maxAccessCount}
+                  onChange={e => setShareDialog(prev => ({ ...prev, maxAccessCount: e.target.value }))}
+                />
+                <span className="file-browser__direct-link-dialog-hint">{t('fileBrowser.maxAccessCountHint')}</span>
+              </div>
+            </div>
+            <div className="file-browser__direct-link-dialog-actions">
+              <button 
+                className="file-browser__direct-link-dialog-btn file-browser__direct-link-dialog-btn--cancel"
+                onClick={() => setShareDialog({ visible: false, expiresAt: '', maxAccessCount: '', password: '' })}
+              >
+                {t('common.cancel')}
+              </button>
+              <button 
+                className="file-browser__direct-link-dialog-btn file-browser__direct-link-dialog-btn--create"
+                onClick={handleCreateShare}
+              >
+                {t('fileBrowser.createShareBtn')}
+              </button>
             </div>
           </div>
         </div>,

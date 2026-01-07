@@ -15,8 +15,8 @@ interface HeicPreviewProps {
   url: string
 }
 
-// libheif CDN 路径
-const LIBHEIF_CDN = 'https://cdn.jsdelivr.net/npm/libheif-js@1.17.1/libheif-bundle'
+// libheif CDN 路径 - 使用更小的 wasm 版本
+const LIBHEIF_CDN = 'https://cdn.jsdelivr.net/npm/libheif-js@1.18.2/libheif'
 
 declare global {
   interface Window {
@@ -45,7 +45,7 @@ export default function HeicPreview({ file, url }: HeicPreviewProps) {
         // 加载 libheif 库
         setProgress(10)
         if (!window.libheif) {
-          await loadScript(`${LIBHEIF_CDN}/libheif-bundle.js`, 'libheif-script')
+          await loadScript(`${LIBHEIF_CDN}/libheif.js`, 'libheif-script')
         }
 
         if (cancelled) return
