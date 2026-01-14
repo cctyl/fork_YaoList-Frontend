@@ -4,41 +4,27 @@
 const NCM_CORE_KEY = new Uint8Array([0x68, 0x7A, 0x48, 0x52, 0x41, 0x6D, 0x73, 0x6F, 0x35, 0x6B, 0x49, 0x6E, 0x62, 0x61, 0x78, 0x57])
 const NCM_META_KEY = new Uint8Array([0x23, 0x31, 0x34, 0x6C, 0x6A, 0x6B, 0x5F, 0x21, 0x5C, 0x5D, 0x26, 0x30, 0x55, 0x3C, 0x27, 0x28])
 
-// QQ Music static key mapping table / QQ 音乐静态密钥映射表
+// QQ Music static key mapping table (correct version) / QQ 音乐静态密钥映射表（正确版本）
+// Source: https://github.com/juhemusic/LRC/blob/master/worker/qmc-worker.ts
 const QMC_STATIC_KEY = [
-  0x77, 0x48, 0x32, 0x73, 0xDE, 0xF2, 0xC0, 0xC8,
-  0x95, 0xEC, 0x30, 0xB2, 0x51, 0xC3, 0xE1, 0xA0,
-  0x9E, 0xE6, 0x9D, 0xCF, 0xFA, 0x7F, 0x14, 0xD1,
-  0xCE, 0xB8, 0xDC, 0xC3, 0x4A, 0x67, 0x93, 0xD6,
-  0x28, 0xC2, 0x91, 0x70, 0xCA, 0x8D, 0xA2, 0xA4,
-  0xF0, 0x08, 0x61, 0x90, 0x7E, 0x6F, 0xA2, 0xE0,
-  0xEB, 0xAE, 0x3E, 0xB6, 0x67, 0xC7, 0x92, 0xF4,
-  0x91, 0xB5, 0xF6, 0x6C, 0x5E, 0x84, 0x40, 0xF7,
-  0xF3, 0x1B, 0x02, 0x7F, 0xD5, 0xAB, 0x41, 0x89,
-  0x28, 0xF4, 0x25, 0xCC, 0x52, 0x11, 0xAD, 0x43,
-  0x68, 0xA6, 0x41, 0x8B, 0x84, 0xB5, 0xFF, 0x2C,
-  0x92, 0x4A, 0x26, 0xD8, 0x47, 0x6A, 0x7C, 0x95,
-  0x61, 0xCC, 0xE6, 0xCB, 0xBB, 0x3F, 0x47, 0x58,
-  0x89, 0x75, 0xC3, 0x75, 0xA1, 0xD9, 0xAF, 0xCC,
-  0x08, 0x73, 0x17, 0xDC, 0xAA, 0x9A, 0xA2, 0x16,
-  0x41, 0xD8, 0xA2, 0x06, 0xC6, 0x8B, 0xFC, 0x66,
-  0x34, 0x9F, 0xCF, 0x18, 0x23, 0xA0, 0x0A, 0x74,
-  0xE7, 0x04, 0x27, 0xE0, 0xA4, 0x42, 0x59, 0x32,
-  0x3D, 0x15, 0x39, 0x26, 0x7D, 0x38, 0x62, 0xDD,
-  0x4D, 0xB3, 0xA1, 0xBD, 0xE0, 0xB4, 0xA5, 0xB1,
-  0x55, 0x46, 0xBD, 0xA5, 0x78, 0x0A, 0xC4, 0xA2,
-  0x69, 0x48, 0xAE, 0x93, 0x39, 0x1B, 0xD9, 0x09,
-  0x6B, 0xBA, 0xBB, 0x1E, 0x47, 0x78, 0xBF, 0x12,
-  0x53, 0x2A, 0x7C, 0xC8, 0x16, 0x01, 0x03, 0x07,
-  0x3D, 0x91, 0x74, 0x43, 0x47, 0x85, 0x16, 0xBC,
-  0x78, 0xCB, 0x63, 0xE6, 0xBC, 0x2A, 0x02, 0x79,
-  0x08, 0x1B, 0x83, 0xE5, 0xD5, 0xBD, 0x64, 0x86,
-  0x9A, 0xFE, 0x03, 0xB2, 0x2B, 0x3B, 0x6B, 0x57,
-  0x5E, 0x06, 0xC7, 0x8A, 0xAB, 0xA5, 0x6E, 0x76,
-  0x61, 0xD1, 0x02, 0x72, 0xD5, 0x48, 0x66, 0x54,
-  0x5E, 0x51, 0xE5, 0x90, 0x23, 0x02, 0xE9, 0xB1,
-  0x7C, 0x73, 0xBE, 0x70, 0xAA, 0x51, 0x58, 0x74
+  0xc3, 0x4a, 0xd6, 0xca, 0x90, 0x67, 0xf7, 0x52,
+  0xd8, 0xa1, 0x66, 0x62, 0x9f, 0x5b, 0x09, 0x00,
+  0xc3, 0x5e, 0x95, 0x23, 0x9f, 0x13, 0x11, 0x7e,
+  0xd8, 0x92, 0x3f, 0xbc, 0x90, 0xbb, 0x74, 0x0e,
+  0xc3, 0x47, 0x74, 0x3d, 0x90, 0xaa, 0x3f, 0x51,
+  0xd8, 0xf4, 0x11, 0x84, 0x9f, 0xde, 0x95, 0x1d,
+  0xc3, 0xc6, 0x09, 0xd5, 0x9f, 0xfa, 0x66, 0xf9,
+  0xd8, 0xf0, 0xf7, 0xa0, 0x90, 0xa1, 0xd6, 0xf3,
 ]
+
+// QMC key index calculation / QMC 密钥索引计算
+function getQmcKeyIndex(offset: number): number {
+  let index = (offset > 0x7fff ? offset % 0x7fff : offset) & 0x7f
+  if (index > 0x3f) {
+    index = (0x80 - index) & 0x3f
+  }
+  return index
+}
 
 // Decryption result interface / 解密结果接口
 export interface DecryptResult {
@@ -348,26 +334,34 @@ export async function decryptNCM(buffer: ArrayBuffer): Promise<DecryptResult | n
   }
 }
 
-// QMC 格式解密
+// QMC 格式解密（使用正确的密钥索引算法）
 export async function decryptQMC(buffer: ArrayBuffer, filename: string): Promise<DecryptResult | null> {
   try {
     const data = new Uint8Array(buffer)
     const decrypted = new Uint8Array(data.length)
     
-    // 使用静态密钥解密
+    // 使用正确的密钥索引算法解密
     for (let i = 0; i < data.length; i++) {
-      const seed = QMC_STATIC_KEY[(i % 0x7fff) & 0xff]
-      decrypted[i] = data[i] ^ seed
+      const keyIndex = getQmcKeyIndex(i)
+      decrypted[i] = data[i] ^ QMC_STATIC_KEY[keyIndex]
     }
     
-    // 根据扩展名判断格式
+    // 根据解密后的魔数判断格式
     const ext = filename.split('.').pop()?.toLowerCase() || ''
     let mimeType = 'audio/mpeg'
     
-    if (ext.includes('flac') || (decrypted[0] === 0x66 && decrypted[1] === 0x4C)) {
+    // 检测 FLAC 魔数 (fLaC)
+    if (ext.includes('flac') || (decrypted[0] === 0x66 && decrypted[1] === 0x4C && decrypted[2] === 0x61 && decrypted[3] === 0x43)) {
       mimeType = 'audio/flac'
-    } else if (ext.includes('ogg') || (decrypted[0] === 0x4F && decrypted[1] === 0x67)) {
+    }
+    // 检测 OGG 魔数 (OggS)
+    else if (ext.includes('ogg') || (decrypted[0] === 0x4F && decrypted[1] === 0x67 && decrypted[2] === 0x67 && decrypted[3] === 0x53)) {
       mimeType = 'audio/ogg'
+    }
+    // 检测 MP3 魔数 或 ID3 标签
+    else if ((decrypted[0] === 0xFF && (decrypted[1] & 0xE0) === 0xE0) || 
+             (decrypted[0] === 0x49 && decrypted[1] === 0x44 && decrypted[2] === 0x33)) {
+      mimeType = 'audio/mpeg'
     }
     
     return {
@@ -381,28 +375,77 @@ export async function decryptQMC(buffer: ArrayBuffer, filename: string): Promise
 }
 
 // MFLAC/MGG 格式解密（QQ 音乐新格式）
-export async function decryptMgg(buffer: ArrayBuffer, filename: string): Promise<DecryptResult | null> {
+// MGG/MFLAC 使用和 QMC 相同的静态密钥，但需要处理文件尾部的元数据
+export async function decryptMgg(buffer: ArrayBuffer, _filename: string): Promise<DecryptResult | null> {
   try {
     const data = new Uint8Array(buffer)
     
-    // MGG/MFLAC 使用更复杂的加密，这里使用简化版本
-    // 实际需要解析文件头获取密钥
-    const headerSize = 1024
-    const decrypted = new Uint8Array(data.length)
+    // 检查文件尾部是否有 QMCv2 标记，确定实际音频数据长度
+    // QMCv2 文件尾部结构: [加密数据][密钥数据][密钥长度(4字节)]
+    // 或者: [加密数据][密钥数据][密钥长度(4字节)]['QTag'][QTag长度(4字节)]
+    // 或者: [加密数据]['STag'][STag数据][STag长度(4字节)]
     
-    // 复制头部
-    for (let i = 0; i < Math.min(headerSize, data.length); i++) {
-      decrypted[i] = data[i]
+    let dataLen = data.length
+    
+    // 检查是否有 STag 或 QTag 标记
+    if (data.length > 8) {
+      // 检查 QTag (在末尾 -8 到 -5 位置)
+      const tail8 = String.fromCharCode(data[data.length - 8], data[data.length - 7], data[data.length - 6], data[data.length - 5])
+      if (tail8 === 'QTag') {
+        const qtagLen = (data[data.length - 4] << 24) | (data[data.length - 3] << 16) | (data[data.length - 2] << 8) | data[data.length - 1]
+        dataLen = data.length - 8 - qtagLen
+      } else {
+        // 检查 STag (在末尾 -4 位置读取长度)
+        const tailLen = data[data.length - 4] | (data[data.length - 3] << 8) | (data[data.length - 2] << 16) | (data[data.length - 1] << 24)
+        if (tailLen > 0 && tailLen < 0x400) {
+          // 检查是否是 STag
+          const stagPos = data.length - 4 - tailLen
+          if (stagPos > 0 && stagPos < data.length - 4) {
+            const stagMark = String.fromCharCode(data[stagPos], data[stagPos + 1], data[stagPos + 2], data[stagPos + 3])
+            if (stagMark === 'STag') {
+              dataLen = stagPos
+            } else {
+              // 可能是旧格式的密钥长度
+              dataLen = data.length - 4 - tailLen
+            }
+          }
+        }
+      }
     }
     
-    // 解密数据部分
-    for (let i = headerSize; i < data.length; i++) {
-      const seed = QMC_STATIC_KEY[(i - headerSize) % 256]
-      decrypted[i] = data[i] ^ seed
+    // 只解密音频数据部分
+    const audioData = data.slice(0, dataLen)
+    const decrypted = new Uint8Array(audioData.length)
+    
+    // 使用正确的密钥索引算法解密
+    for (let i = 0; i < audioData.length; i++) {
+      const keyIndex = getQmcKeyIndex(i)
+      decrypted[i] = audioData[i] ^ QMC_STATIC_KEY[keyIndex]
     }
     
-    const ext = filename.split('.').pop()?.toLowerCase() || ''
-    const mimeType = ext.includes('flac') ? 'audio/flac' : 'audio/ogg'
+    // 根据解密后的魔数判断格式
+    let mimeType = 'audio/ogg'
+    
+    // 检测 FLAC 魔数 (fLaC)
+    if (decrypted[0] === 0x66 && decrypted[1] === 0x4C && decrypted[2] === 0x61 && decrypted[3] === 0x43) {
+      mimeType = 'audio/flac'
+    }
+    // 检测 OGG 魔数 (OggS)
+    else if (decrypted[0] === 0x4F && decrypted[1] === 0x67 && decrypted[2] === 0x67 && decrypted[3] === 0x53) {
+      mimeType = 'audio/ogg'
+    }
+    // 检测 MP3 魔数
+    else if (decrypted[0] === 0xFF && (decrypted[1] & 0xE0) === 0xE0) {
+      mimeType = 'audio/mpeg'
+    }
+    // 检测 ID3 标签 (MP3)
+    else if (decrypted[0] === 0x49 && decrypted[1] === 0x44 && decrypted[2] === 0x33) {
+      mimeType = 'audio/mpeg'
+    } else {
+      // 解密后不是有效的音频格式，可能是 QMCv2 动态密钥加密
+      console.error('MGG: QMCv2 dynamic key encryption detected, ekey required')
+      return null
+    }
     
     return {
       data: new Blob([decrypted], { type: mimeType }),

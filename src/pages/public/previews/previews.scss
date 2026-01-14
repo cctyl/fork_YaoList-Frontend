@@ -1609,6 +1609,56 @@
       &.active {
         color: var(--accent-color);
       }
+
+      &--download-decrypted {
+        width: auto;
+        padding: 0 12px;
+        gap: 4px;
+        border-radius: 18px;
+        background: var(--accent-color);
+        color: white;
+
+        &:hover {
+          background: var(--accent-hover);
+        }
+
+        &:disabled {
+          background: var(--bg-tertiary);
+          color: var(--text-secondary);
+        }
+      }
+    }
+
+    .preview__audio-download-format {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .preview__audio-download-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .preview__audio-btn--download-mp3 {
+      width: auto !important;
+      padding: 0 12px;
+      gap: 6px;
+      border-radius: 18px;
+      background: var(--accent-color);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+
+      &:hover {
+        background: var(--accent-hover);
+      }
+
+      &:disabled {
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+      }
     }
 
     .preview__audio-toolbar {

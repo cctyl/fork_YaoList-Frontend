@@ -1189,6 +1189,48 @@
     text-align: left;
   }
 
+  &__space-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    
+    svg {
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+  }
+  
+  &__space-bar-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  &__space-bar-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  
+  &__space-bar-progress {
+    height: 4px;
+    background: var(--bg-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  
+  &__space-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
   &__space-badge {
     position: relative;
     display: inline-flex;
@@ -3346,4 +3388,112 @@
 // 隐藏列表视图
 .file-browser__table-body--hidden {
   display: none;
+}
+
+// 属性弹窗样式
+.file-browser__properties-dialog {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  
+  // 有自定义背景时 - 毛玻璃效果
+  .has-custom-bg & {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+.file-browser__properties-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.file-browser__properties-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+}
+
+.file-browser__properties-content {
+  padding: 24px 20px;
+}
+
+.file-browser__properties-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  color: var(--text-secondary);
+  
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+}
+
+.file-browser__properties-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.file-browser__properties-name {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.file-browser__properties-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-browser__properties-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.file-browser__properties-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.file-browser__properties-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-all;
 }

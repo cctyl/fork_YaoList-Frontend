@@ -534,6 +534,27 @@ export default function FileBrowserContent() {
     visible: false,
     file: null
   })
+  // 属性弹窗状态
+  const [propertiesDialog, setPropertiesDialog] = useState<{
+    visible: boolean
+    loading: boolean
+    data: {
+      name: string
+      path: string
+      size: number
+      is_dir: boolean
+      modified: string
+      type: string
+      file_count?: number
+      folder_count?: number
+      extension?: string
+      mime_type?: string
+    } | null
+  }>({
+    visible: false,
+    loading: false,
+    data: null
+  })
   // 路径选择弹窗状态
   const [pathModal, setPathModal] = useState<{
     visible: boolean
@@ -1301,6 +1322,29 @@ export default function FileBrowserContent() {
     setPathModal(prev => ({ ...prev, visible: false }))
   }
 
+  // 查看属性
+  const handleProperties = async () => {
+    if (!contextMenu.file) return
+    const file = contextMenu.file
+    setContextMenu(prev => ({ ...prev, visible: false }))
+    
+    const filePath = currentPath ? `/${currentPath}/${file.name}` : `/${file.name}`
+    setPropertiesDialog({ visible: true, loading: true, data: null })
+    
+    try {
+      const response = await api.post('/api/fs/properties', { path: filePath })
+      if (response.data.code === 200) {
+        setPropertiesDialog({ visible: true, loading: false, data: response.data.data })
+      } else {
+        toast.error(response.data.message || t('fileBrowser.operationFailed'))
+        setPropertiesDialog({ visible: false, loading: false, data: null })
+      }
+    } catch (err) {
+      toast.error(t('fileBrowser.operationFailed'))
+      setPropertiesDialog({ visible: false, loading: false, data: null })
+    }
+  }
+
   // 创建分享
   const handleShare = () => {
     if (!contextMenu.file) return
@@ -1975,6 +2019,11 @@ export default function FileBrowserContent() {
                     <Link2 size={18} style={{ color: '#af52de' }} /> {t('fileBrowser.copyDirectLink')}
                   </button>
                 )}
+                {permissions?.read_files && (
+                  <button onClick={handleProperties}>
+                    <Settings size={18} style={{ color: '#8e8e93' }} /> {t('fileBrowser.properties')}
+                  </button>
+                )}
               </div>,
               document.body
             )}
@@ -2320,8 +2369,8 @@ export default function FileBrowserContent() {
           </div>
         )}
 
-      {/* 选择操作栏 - 底部居中 */}
-      {selectionMode && selectedFiles.length > 0 && (
+      {/* 选择操作栏 - 底部居中（使用 Portal 渲染到 body，避免被父容器 transform 影响） */}
+      {selectionMode && selectedFiles.length > 0 && createPortal(
         <div className="file-browser__selection-bar">
           <span className="file-browser__selection-count">
             {selectedFiles.length}
@@ -2537,7 +2586,8 @@ export default function FileBrowserContent() {
               <X size={20} />
             </button>
           </Tooltip>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* 新建文件夹对话框 */}
@@ -2986,6 +3036,90 @@ export default function FileBrowserContent() {
                   <span>{t('search.hint')}</span>
                   <span className="file-browser__search-modal-shortcut">Ctrl + F</span>
                 </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 属性弹窗 */}
+      {propertiesDialog.visible && createPortal(
+        <div className={`file-browser__dialog-overlay ${hasBackground ? 'has-custom-bg' : ''}`} onClick={() => setPropertiesDialog({ visible: false, loading: false, data: null })}>
+          <div className="file-browser__properties-dialog" onClick={e => e.stopPropagation()}>
+            <div className="file-browser__properties-header">
+              <h3>{t('fileBrowser.properties')}</h3>
+              <button 
+                className="file-browser__properties-close"
+                onClick={() => setPropertiesDialog({ visible: false, loading: false, data: null })}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="file-browser__properties-content">
+              {propertiesDialog.loading ? (
+                <div className="file-browser__properties-loading">
+                  <Loader2 size={32} className="spinning" />
+                  <span>{t('fileBrowser.loading')}</span>
+                </div>
+              ) : propertiesDialog.data && (
+                <>
+                  <div className="file-browser__properties-icon">
+                    {propertiesDialog.data.is_dir ? (
+                      <Folder size={48} style={{ color: '#f59e0b' }} />
+                    ) : (
+                      <File size={48} style={{ color: '#6b7280' }} />
+                    )}
+                  </div>
+                  <div className="file-browser__properties-name">{propertiesDialog.data.name}</div>
+                  <div className="file-browser__properties-list">
+                    <div className="file-browser__properties-item">
+                      <span className="file-browser__properties-label">{t('fileBrowser.type')}</span>
+                      <span className="file-browser__properties-value">
+                        {propertiesDialog.data.is_dir 
+                          ? t('fileBrowser.folder') 
+                          : propertiesDialog.data.extension?.toUpperCase() || t('fileBrowser.file')}
+                      </span>
+                    </div>
+                    <div className="file-browser__properties-item">
+                      <span className="file-browser__properties-label">{t('fileBrowser.path')}</span>
+                      <span className="file-browser__properties-value">
+                        {propertiesDialog.data.path}
+                      </span>
+                    </div>
+                    <div className="file-browser__properties-item">
+                      <span className="file-browser__properties-label">{t('fileBrowser.size')}</span>
+                      <span className="file-browser__properties-value">
+                        {formatSize(propertiesDialog.data.size)}
+                        {propertiesDialog.data.size > 0 && ` (${propertiesDialog.data.size.toLocaleString()} ${t('fileBrowser.bytes')})`}
+                      </span>
+                    </div>
+                    {propertiesDialog.data.is_dir && (
+                      <>
+                        <div className="file-browser__properties-item">
+                          <span className="file-browser__properties-label">{t('fileBrowser.contains')}</span>
+                          <span className="file-browser__properties-value">
+                            {propertiesDialog.data.file_count} {t('fileBrowser.files')}, {propertiesDialog.data.folder_count} {t('fileBrowser.folders')}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    {propertiesDialog.data.modified && (
+                      <div className="file-browser__properties-item">
+                        <span className="file-browser__properties-label">{t('fileBrowser.modified')}</span>
+                        <span className="file-browser__properties-value">
+                          {new Date(propertiesDialog.data.modified).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                    {!propertiesDialog.data.is_dir && propertiesDialog.data.mime_type && (
+                      <div className="file-browser__properties-item">
+                        <span className="file-browser__properties-label">MIME</span>
+                        <span className="file-browser__properties-value">{propertiesDialog.data.mime_type}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -1,3 +1,10 @@
+// Polyfill for Object.hasOwn (ES2022) - 兼容旧版浏览器
+if (!(Object as any).hasOwn) {
+  (Object as any).hasOwn = function(obj: object, prop: PropertyKey): boolean {
+    return Object.prototype.hasOwnProperty.call(obj, prop)
+  }
+}
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
