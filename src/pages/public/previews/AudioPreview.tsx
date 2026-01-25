@@ -5,7 +5,6 @@ import {
   Download, Repeat, Shuffle, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react'
 import { decryptAudio, isEncryptedAudio, DecryptResult } from '../../../utils/audioDecrypt'
-import { convertToMp3, needsConversion, ConvertProgress } from '../../../utils/audioEncoder'
 import './previews.scss'
 
 // 从音频文件提取封面
@@ -127,9 +126,6 @@ export default function AudioPreview({ url, file, siblings = [], onNavigate }: A
   const [decryptError, setDecryptError] = useState<string | null>(null)
   const [audioMetadata, setAudioMetadata] = useState<DecryptResult['metadata']>(undefined)
   const [decryptedMimeType, setDecryptedMimeType] = useState<string | null>(null)
-  const [decryptedBlob, setDecryptedBlob] = useState<Blob | null>(null)
-  const [converting, setConverting] = useState(false)
-  const [convertProgress, setConvertProgress] = useState<ConvertProgress | null>(null)
   const [currentIndex, setCurrentIndex] = useState(() => {
     return siblings.findIndex(s => s.name === filename)
   })
@@ -165,7 +161,6 @@ export default function AudioPreview({ url, file, siblings = [], onNavigate }: A
             const blobUrl = URL.createObjectURL(result.data)
             setDecryptedUrl(blobUrl)
             setDecryptedMimeType(result.mimeType)
-            setDecryptedBlob(result.data)
             
             if (result.cover) {
               setCoverUrl(URL.createObjectURL(result.cover))
@@ -366,54 +361,6 @@ export default function AudioPreview({ url, file, siblings = [], onNavigate }: A
     link.click()
   }
 
-  // 对于加密格式，显示下载解密后音频的按钮
-  const showDecryptedDownload = isEncryptedAudio(currentFilename) && decryptedBlob
-
-  // 下载解密后的音频（直接下载，不转换格式）
-  const handleDownloadDecrypted = () => {
-    if (!decryptedBlob || !decryptedMimeType) return
-    
-    // 根据 mimeType 确定扩展名
-    const ext = decryptedMimeType === 'audio/flac' ? '.flac' : '.mp3'
-    const baseName = currentFilename.replace(/\.[^/.]+$/, '')
-    const downloadFilename = baseName + ext
-    
-    // 触发下载
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(decryptedBlob)
-    link.download = downloadFilename
-    link.click()
-    URL.revokeObjectURL(link.href)
-  }
-
-  // 检查是否需要转换为MP3（非MP3格式都需要）
-  const showConvertButton = needsConversion(currentFilename)
-
-  // 下载为MP3（前端转码）
-  const handleDownloadAsMp3 = async () => {
-    if (converting || !currentUrl) return
-    
-    setConverting(true)
-    setConvertProgress({ stage: 'decoding', progress: 0 })
-    
-    try {
-      // 使用当前播放的 URL 进行转换
-      const result = await convertToMp3(currentUrl, currentFilename, setConvertProgress)
-      
-      // 触发下载
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(result.blob)
-      link.download = result.filename
-      link.click()
-      URL.revokeObjectURL(link.href)
-    } catch (err) {
-      console.error('Convert to MP3 failed:', err)
-    } finally {
-      setConverting(false)
-      setConvertProgress(null)
-    }
-  }
-
   // 显示名称（优先使用元数据）
   const displayName = audioMetadata?.title || currentFilename.replace(/\.[^/.]+$/, '')
   const artistName = audioMetadata?.artist
@@ -564,55 +511,15 @@ export default function AudioPreview({ url, file, siblings = [], onNavigate }: A
           />
         </div>
 
-        <div className="preview__audio-download-btns">
-          {/* 原始格式下载 */}
-          <button 
-            className="preview__audio-btn preview__audio-btn--small"
-            onClick={handleDownload} 
-            title={t('preview.download')}
-            disabled={isEncryptedAudio(currentFilename) && !decryptedUrl}
-          >
-            <Download size={18} />
-          </button>
-
-          {/* 下载解密后的音频（加密格式显示） */}
-          {showDecryptedDownload && (
-            <button 
-              className="preview__audio-btn preview__audio-btn--download-mp3"
-              onClick={handleDownloadDecrypted}
-              title={t('preview.downloadDecrypted', { format: decryptedMimeType === 'audio/flac' ? 'FLAC' : 'MP3' })}
-            >
-              <Download size={16} />
-              <span>{decryptedMimeType === 'audio/flac' ? 'FLAC' : 'MP3'}</span>
-            </button>
-          )}
-
-          {/* 下载为MP3（非MP3格式显示） */}
-          {showConvertButton && (
-            <button 
-              className="preview__audio-btn preview__audio-btn--download-mp3"
-              onClick={handleDownloadAsMp3}
-              title={t('preview.downloadAsMp3')}
-              disabled={converting || (isEncryptedAudio(currentFilename) && !decryptedUrl)}
-            >
-              {converting ? (
-                <>
-                  <Loader2 size={16} className="preview__audio-spinner" />
-                  <span>
-                    {convertProgress?.stage === 'decoding' 
-                      ? t('preview.decoding')
-                      : `${convertProgress?.progress || 0}%`}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Download size={16} />
-                  <span>MP3</span>
-                </>
-              )}
-            </button>
-          )}
-        </div>
+        {/* 下载按钮 */}
+        <button 
+          className="preview__audio-btn preview__audio-btn--small"
+          onClick={handleDownload} 
+          title={t('preview.download')}
+          disabled={isEncryptedAudio(currentFilename) && !decryptedUrl}
+        >
+          <Download size={18} />
+        </button>
       </div>
     </div>
   )

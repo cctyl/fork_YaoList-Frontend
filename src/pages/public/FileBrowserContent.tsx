@@ -501,9 +501,16 @@ export default function FileBrowserContent() {
   const [files, setFiles] = useState<FileItem[]>([])
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
-  const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'size' | 'modified', direction: 'asc' | 'desc' }>({
-    key: 'name',
-    direction: 'asc'
+  const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'size' | 'modified', direction: 'asc' | 'desc' }>(() => {
+    const saved = localStorage.getItem('sortConfig')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return { key: 'name', direction: 'asc' }
+      }
+    }
+    return { key: 'name', direction: 'asc' }
   })
   const [permissions, setPermissions] = useState<UserPermissions | null>(null)
   const [pagination, setPagination] = useState(() => {
@@ -652,7 +659,10 @@ export default function FileBrowserContent() {
     cleanupPasswordsForPath(fullPath)
     // 立即设置加载状态，确保显示加载动画
     setPageState({ contentLoading: true })
-    loadFiles(currentPath)
+    // 直接从 localStorage 读取排序配置，避免 stale closure
+    const savedSort = localStorage.getItem('sortConfig')
+    const sort = savedSort ? JSON.parse(savedSort) : { key: 'name', direction: 'asc' }
+    loadFiles(currentPath, 1, undefined, sort)
   }, [currentPath])
 
   // 检查搜索是否启用（使用公开API）
@@ -856,12 +866,36 @@ export default function FileBrowserContent() {
             })
           }
         } else {
-          // 请求失败，跳转到登录页
-          window.location.href = '/login?msg=error'
+          // 请求失败，使用默认只读权限（不跳转登录页，允许游客浏览）
+          console.error('获取权限失败，使用默认权限')
+          setPermissions({
+            read_files: true,
+            create_upload: false,
+            rename_files: false,
+            move_files: false,
+            copy_files: false,
+            delete_files: false,
+            allow_direct_link: false,
+            allow_share: false,
+            extract_files: false,
+            is_admin: false
+          })
         }
-      } catch {
-        // 请求失败，跳转到登录页
-        window.location.href = '/login?msg=error'
+      } catch (err) {
+        // 请求失败，使用默认只读权限（不跳转登录页，允许游客浏览）
+        console.error('获取权限异常:', err)
+        setPermissions({
+          read_files: true,
+          create_upload: false,
+          rename_files: false,
+          move_files: false,
+          copy_files: false,
+          delete_files: false,
+          allow_direct_link: false,
+          allow_share: false,
+          extract_files: false,
+          is_admin: false
+        })
       }
     }
     loadPermissions()
@@ -1084,6 +1118,7 @@ export default function FileBrowserContent() {
     const newDirection = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     const newSort = { key, direction: newDirection as 'asc' | 'desc' }
     setSortConfig(newSort)
+    localStorage.setItem('sortConfig', JSON.stringify(newSort))
     loadFiles(currentPath, 1, pagination.perPage, newSort)
   }
 
@@ -1154,7 +1189,7 @@ export default function FileBrowserContent() {
       const response = await api.post('/api/fs/rename', { path: filePath, name: renameDialog.newName })
       if (response.data.code === 200) {
         toast.success(t('fileBrowser.renameSuccess'))
-        loadFiles(currentPath)
+        loadFiles(currentPath, 1, undefined, sortConfig)
       } else {
         toast.error(response.data.message || t('fileBrowser.operationFailed'))
       }
@@ -1180,7 +1215,7 @@ export default function FileBrowserContent() {
       const response = await api.post('/api/fs/remove', { path: filePath })
       if (response.data.code === 200) {
         toast.success(t('fileBrowser.deleteSuccess'))
-        loadFiles(currentPath)
+        loadFiles(currentPath, 1, undefined, sortConfig)
       } else {
         toast.error(response.data.message || t('fileBrowser.operationFailed'))
       }
@@ -1309,7 +1344,7 @@ export default function FileBrowserContent() {
       })
       if (response.data.code === 200) {
         toast.success(pathModal.mode === 'copy' ? t('fileBrowser.copySuccess') : t('fileBrowser.moveSuccess'))
-        loadFiles(currentPath)
+        loadFiles(currentPath, 1, undefined, sortConfig)
         // 清除选择状态
         setSelectionMode(false)
         setSelectedFiles([])
@@ -1395,7 +1430,7 @@ export default function FileBrowserContent() {
       if (response.data.code === 200) {
         toast.success(t('fileBrowser.createFolderSuccess'))
         setMkdirDialog({ visible: false, name: '' })
-        loadFiles(currentPath)
+        loadFiles(currentPath, 1, undefined, sortConfig)
       } else {
         toast.error(response.data.message || t('fileBrowser.operationFailed'))
       }
@@ -1418,7 +1453,7 @@ export default function FileBrowserContent() {
       if (response.data.code === 200) {
         toast.success(t('fileBrowser.createFileSuccess'))
         setNewFileDialog({ visible: false, name: '' })
-        loadFiles(currentPath)
+        loadFiles(currentPath, 1, undefined, sortConfig)
       } else {
         toast.error(response.data.message || t('fileBrowser.operationFailed'))
       }
@@ -1643,15 +1678,15 @@ export default function FileBrowserContent() {
     // 上传完成后刷新文件列表
     const uploadTargetPath = targetPath.replace(/^\//, '')
     if (currentPath === uploadTargetPath || currentPath.startsWith(uploadTargetPath + '/')) {
-      loadFiles(currentPath)
+      loadFiles(currentPath, 1, undefined, sortConfig)
     }
   }
 
   // 刷新文件列表
   const handleRefresh = useCallback(() => {
-    loadFiles(currentPath)
+    loadFiles(currentPath, 1, undefined, sortConfig)
     toast.success(t('fileBrowser.refreshSuccess'))
-  }, [currentPath, loadFiles, toast, t])
+  }, [currentPath, loadFiles, sortConfig, toast, t])
 
   // 注册悬浮工具栏回调到 FileRouter
   useEffect(() => {
@@ -1909,7 +1944,7 @@ export default function FileBrowserContent() {
                     <button 
                       className="file-browser__pagination-btn file-browser__pagination-btn--icon"
                       disabled={pagination.page === 1}
-                      onClick={() => loadFiles(currentPath, pagination.page - 1)}
+                      onClick={() => loadFiles(currentPath, pagination.page - 1, undefined, sortConfig)}
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -1921,7 +1956,7 @@ export default function FileBrowserContent() {
                     <button 
                       className="file-browser__pagination-btn file-browser__pagination-btn--icon"
                       disabled={pagination.page >= Math.ceil(pagination.total / pagination.perPage)}
-                      onClick={() => loadFiles(currentPath, pagination.page + 1)}
+                      onClick={() => loadFiles(currentPath, pagination.page + 1, undefined, sortConfig)}
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -1962,7 +1997,7 @@ export default function FileBrowserContent() {
                     onClick={() => {
                       setShowPerPageDropdown(false)
                       localStorage.setItem('perPage', String(num))
-                      loadFiles(currentPath, 1, num)
+                      loadFiles(currentPath, 1, num, sortConfig)
                     }}
                   >
                     {num} {t('fileBrowser.perPage')}
@@ -2233,7 +2268,7 @@ export default function FileBrowserContent() {
                         } else {
                           toast.warning(t('fileBrowser.deletePartial', { success: successCount, fail: failCount }))
                         }
-                        loadFiles(currentPath)
+                        loadFiles(currentPath, 1, undefined, sortConfig)
                         setSelectionMode(false)
                         setSelectedFiles([])
                         setBatchDeleteDialog({ visible: false, names: [] })
@@ -2826,7 +2861,7 @@ export default function FileBrowserContent() {
         fileName={extractDialog.fileName}
         sourcePath={currentPath ? `/${currentPath}` : '/'}
         onClose={() => setExtractDialog({ visible: false, fileName: '' })}
-        onSuccess={() => loadFiles(currentPath)}
+        onSuccess={() => loadFiles(currentPath, 1, undefined, sortConfig)}
       />
 
       {/* 关于弹窗 */}
