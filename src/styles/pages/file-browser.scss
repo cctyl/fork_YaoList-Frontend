@@ -3291,7 +3291,7 @@
 }
 
 
-// 图片瀑布流视图 - 真正的瀑布流布局
+// 图片视图 - 瀑布流布局
 .file-browser__gallery {
   columns: 5;
   column-gap: 16px;
@@ -3383,6 +3383,150 @@
   .file-browser__gallery-item:hover & {
     opacity: 1;
   }
+}
+
+// 卡片视图 - 瀑布流布局，支持所有文件类型
+.file-browser__card-grid {
+  columns: 6;
+  column-gap: 12px;
+  padding: 8px 0 24px 0;
+
+  @media (max-width: 1400px) {
+    columns: 5;
+  }
+  @media (max-width: 1100px) {
+    columns: 4;
+  }
+  @media (max-width: 768px) {
+    columns: 3;
+    column-gap: 8px;
+  }
+  @media (max-width: 480px) {
+    columns: 2;
+    column-gap: 6px;
+  }
+}
+
+.file-browser__card-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  break-inside: avoid;
+  margin-bottom: 12px;
+
+  // 图片类型 - 无边框，hover显示文件名
+  &.file-browser__card-item--media {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      border-color: var(--accent-color);
+    }
+
+    // 文件名浮层 - hover显示
+    .file-browser__card-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 6px 4px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    &:hover .file-browser__card-info {
+      opacity: 1;
+    }
+
+    .file-browser__card-name {
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      font-size: 11px;
+    }
+  }
+
+  // 普通文件类型 - 简洁样式
+  &.file-browser__card-item--file {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+}
+
+.file-browser__card-preview {
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+  .file-browser__card-item--media:hover & img {
+    transform: scale(1.02);
+  }
+}
+
+.file-browser__card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 12px;
+  
+  svg {
+    opacity: 0.8;
+  }
+}
+
+.file-browser__card-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.file-browser__card-info {
+  padding: 6px 4px;
+}
+
+.file-browser__card-name {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
 }
 
 // 隐藏列表视图

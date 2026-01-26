@@ -433,7 +433,7 @@ interface UserPermissions {
   is_admin: boolean
 }
 
-// 图片画廊项组件 - 异步加载下载URL
+// 图片视图项组件 - 只用于图片，瀑布流布局
 function GalleryItem({ file, currentPath, onClick, onContextMenu }: {
   file: FileItem
   currentPath: string
@@ -483,6 +483,170 @@ function GalleryItem({ file, currentPath, onClick, onContextMenu }: {
       </div>
       <div className="file-browser__gallery-name" title={file.name}>
         {file.name}
+      </div>
+    </div>
+  )
+}
+
+// 视频缩略图组件 - 直接显示 video 元素帧，支持懒加载
+function VideoThumbnail({ url, onError }: { url: string; onError: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isReady, setIsReady] = useState(false)
+  const [shouldLoad, setShouldLoad] = useState(false)
+  
+  // 使用 IntersectionObserver 实现懒加载
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setShouldLoad(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '50px' }
+    )
+    
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+  
+  // 加载视频并跳转到某一帧
+  useEffect(() => {
+    if (!shouldLoad || !url) return
+    
+    const video = videoRef.current
+    if (!video) return
+    
+    const handleLoadedData = () => {
+      // 跳转到 1 秒处或 10% 位置避免黑帧
+      video.currentTime = Math.min(1, video.duration * 0.1)
+    }
+    
+    const handleSeeked = () => {
+      setIsReady(true)
+    }
+    
+    const handleError = () => {
+      onError()
+    }
+    
+    video.addEventListener('loadeddata', handleLoadedData)
+    video.addEventListener('seeked', handleSeeked)
+    video.addEventListener('error', handleError)
+    
+    video.src = url
+    
+    return () => {
+      video.removeEventListener('loadeddata', handleLoadedData)
+      video.removeEventListener('seeked', handleSeeked)
+      video.removeEventListener('error', handleError)
+    }
+  }, [shouldLoad, url, onError])
+  
+  return (
+    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+      <video 
+        ref={videoRef}
+        preload="metadata"
+        muted
+        playsInline
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover',
+          display: isReady ? 'block' : 'none'
+        }}
+      />
+      {!isReady && (
+        <div className="file-browser__card-loading">
+          <Loader2 size={20} className="file-browser__spinning" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 卡片视图项组件 - 支持所有文件类型
+function CardItem({ file, currentPath, onClick, onContextMenu }: {
+  file: FileItem
+  currentPath: string
+  onClick: () => void
+  onContextMenu: (e: React.MouseEvent) => void
+}) {
+  const [mediaUrl, setMediaUrl] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
+  const { icon: IconComponent, color } = getFileIcon(file.name, file.is_dir)
+  
+  // 检测文件类型
+  const ext = file.name.split('.').pop()?.toLowerCase() || ''
+  const isImage = !file.is_dir && /^(jpg|jpeg|png|gif|webp|bmp|svg|ico|avif)$/i.test(ext)
+  const isVideo = !file.is_dir && /^(mp4|webm|ogg|mov)$/i.test(ext)
+  const needsThumbnail = isImage || isVideo
+
+  useEffect(() => {
+    if (!needsThumbnail) return
+    
+    setLoading(true)
+    setError(false)
+    const fetchUrl = async () => {
+      try {
+        const filePath = currentPath ? `/${currentPath}/${file.name}` : `/${file.name}`
+        const response = await api.post('/api/fs/get_download_url', { path: filePath })
+        if (response.data.code === 200) {
+          setMediaUrl(response.data.data.url)
+        } else {
+          setError(true)
+        }
+      } catch {
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUrl()
+  }, [file.name, currentPath, needsThumbnail])
+
+  const isMediaType = needsThumbnail && mediaUrl && !error
+
+  return (
+    <div 
+      className={`file-browser__card-item ${isMediaType ? 'file-browser__card-item--media' : 'file-browser__card-item--file'}`}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
+      <div className="file-browser__card-preview">
+        {file.is_dir ? (
+          <div className="file-browser__card-icon">
+            <Folder size={32} style={{ color: '#d4a574' }} />
+          </div>
+        ) : loading ? (
+          <div className="file-browser__card-loading">
+            <Loader2 size={20} className="file-browser__spinning" />
+          </div>
+        ) : isImage && mediaUrl && !error ? (
+          <img 
+            src={mediaUrl}
+            alt={file.name}
+            loading="lazy"
+            onError={() => setError(true)}
+          />
+        ) : isVideo && mediaUrl && !error ? (
+          <VideoThumbnail url={mediaUrl} onError={() => setError(true)} />
+        ) : (
+          <div className="file-browser__card-icon">
+            <IconComponent size={32} style={{ color }} />
+          </div>
+        )}
+      </div>
+      <div className="file-browser__card-info">
+        <div className="file-browser__card-name" title={file.name}>
+          {file.name}
+        </div>
       </div>
     </div>
   )
@@ -601,7 +765,7 @@ export default function FileBrowserContent() {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [allFileNames, setAllFileNames] = useState<string[]>([])  // 目录下所有文件名
-  const [viewMode, setViewMode] = useState<'list' | 'gallery'>('list')  // 视图模式
+  const [viewMode, setViewMode] = useState<'list' | 'gallery' | 'card'>('list')  // 视图模式：列表、图片、卡片
   const [isPackaging, setIsPackaging] = useState(false)
   const [aboutDialog, setAboutDialog] = useState(false)
   const [driverSpaceInfo, setDriverSpaceInfo] = useState<Record<string, SpaceInfo | null>>({})
@@ -1712,9 +1876,6 @@ export default function FileBrowserContent() {
     }
   }, [header, readme, passwordRequired, loading, setPageState])
 
-  // 检查是否有图片文件（用于显示视图切换按钮）
-  const hasImageFiles = files.some(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|heic|heif|avif|tiff?|raw|cr2|cr3|nef|arw|dng|orf|rw2|pef|srw|raf)$/i.test(f.name))
-
   // 注册 header 按钮（搜索和视图切换）到 FileRouter
   useEffect(() => {
     setHeaderButtons(
@@ -1730,22 +1891,28 @@ export default function FileBrowserContent() {
             </button>
           </Tooltip>
         )}
-        {/* 视图切换按钮 - 只在有图片时显示 */}
-        {hasImageFiles && (
-          <Tooltip text={viewMode === 'list' ? (t('fileBrowser.galleryView') || '图片视图') : (t('fileBrowser.listView') || '列表视图')} position="bottom">
-            <button 
-              className="file-browser__header-btn"
-              onClick={() => setViewMode(viewMode === 'list' ? 'gallery' : 'list')}
-            >
-              {viewMode === 'list' ? <LayoutGrid size={18} /> : <List size={18} />}
-            </button>
-          </Tooltip>
-        )}
+        {/* 视图切换按钮 - 循环切换：列表 → 图片 → 卡片 */}
+        <Tooltip text={
+          viewMode === 'list' ? (t('fileBrowser.galleryView') || '图片视图') :
+          viewMode === 'gallery' ? (t('fileBrowser.cardView') || '卡片视图') :
+          (t('fileBrowser.listView') || '列表视图')
+        } position="bottom">
+          <button 
+            className="file-browser__header-btn"
+            onClick={() => setViewMode(
+              viewMode === 'list' ? 'gallery' : 
+              viewMode === 'gallery' ? 'card' : 'list'
+            )}
+          >
+            {viewMode === 'list' ? <FileImage size={18} /> : 
+             viewMode === 'gallery' ? <LayoutGrid size={18} /> : <List size={18} />}
+          </button>
+        </Tooltip>
       </>
     )
     // 组件卸载时清空 headerButtons
     return () => setHeaderButtons(null)
-  }, [searchEnabled, hasImageFiles, viewMode, t, setHeaderButtons])
+  }, [searchEnabled, viewMode, t, setHeaderButtons])
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '-'
@@ -1833,10 +2000,10 @@ export default function FileBrowserContent() {
               </div>
               <div className="file-browser__col-actions"></div>
             </div>
-            {/* 图片瀑布流视图 */}
+            {/* 图片视图 - 只显示图片文件，瀑布流布局 */}
             {viewMode === 'gallery' && (
               <div className="file-browser__gallery">
-                {files.filter(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico)$/i.test(f.name)).map((file, index) => (
+                {files.filter(f => !f.is_dir && /\.(jpg|jpeg|png|gif|webp|bmp|svg|ico|avif)$/i.test(f.name)).map((file, index) => (
                   <GalleryItem 
                     key={file.name || `gallery-${index}`}
                     file={file}
@@ -1848,8 +2015,23 @@ export default function FileBrowserContent() {
               </div>
             )}
 
+            {/* 卡片视图 - 显示所有文件 */}
+            {viewMode === 'card' && (
+              <div className="file-browser__card-grid">
+                {files.map((file, index) => (
+                  <CardItem 
+                    key={file.name || `card-${index}`}
+                    file={file}
+                    currentPath={currentPath}
+                    onClick={() => handleNavigate(currentPath ? `${currentPath}/${file.name}` : file.name)}
+                    onContextMenu={(e) => handleContextMenu(e, file)}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* 列表视图 */}
-            <div className={`file-browser__table-body ${viewMode === 'gallery' ? 'file-browser__table-body--hidden' : ''}`}>
+            <div className={`file-browser__table-body ${viewMode !== 'list' ? 'file-browser__table-body--hidden' : ''}`}>
               {files.map((file, index) => {
                 const { icon: IconComponent, color } = getFileIcon(file.name, file.is_dir)
                 const isSelected = selectedFiles.includes(file.name)

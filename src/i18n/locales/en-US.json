@@ -551,6 +551,7 @@
     "switchLanguage": "Switch language",
     "listView": "List view",
     "galleryView": "Gallery view",
+    "cardView": "Card view",
     "developing": "Feature in development...",
     "refreshSuccess": "Refreshed successfully",
     "createFolderSuccess": "Folder created successfully",
