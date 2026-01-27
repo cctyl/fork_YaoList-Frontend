@@ -269,6 +269,90 @@ export default function Drivers() {
       )
     }
 
+    // link类型显示为按钮，点击打开URL（支持{field}变量替换）
+    if (schema.type === 'link' && schema.link) {
+      const handleLinkClick = () => {
+        // 替换URL中的{field}变量为表单数据
+        let url = schema.link as string
+        Object.keys(formData).forEach(field => {
+          url = url.replace(new RegExp(`\\{${field}\\}`, 'g'), encodeURIComponent(formData[field] || ''))
+        })
+        window.open(url, '_blank')
+      }
+      return (
+        <div key={key} className="drivers__form-field drivers__form-field--link">
+          <button type="button" className="drivers__btn-link" onClick={handleLinkClick}>
+            {title}
+          </button>
+          {description && (
+            <span className="drivers__field-hint">{description}</span>
+          )}
+        </div>
+      )
+    }
+
+    // oauth类型显示为按钮，弹窗授权后自动填入refresh_token
+    if (schema.type === 'oauth' && schema.link) {
+      const handleOAuthClick = async () => {
+        // 构建回调地址
+        const redirectUri = `${window.location.origin}/api/oauth/google/callback`
+        
+        // 替换URL中的{field}变量
+        let url = schema.link as string
+        Object.keys(formData).forEach(field => {
+          url = url.replace(new RegExp(`\\{${field}\\}`, 'g'), encodeURIComponent(formData[field] || ''))
+        })
+        url = url.replace(/\{redirect_uri\}/g, encodeURIComponent(redirectUri))
+
+        // 打开弹窗
+        const popup = window.open(url, 'oauth_popup', 'width=600,height=700,scrollbars=yes')
+        
+        // 监听 postMessage 获取授权码
+        const handleMessage = async (event: MessageEvent) => {
+          if (event.data?.type === 'oauth_code' && event.data?.code) {
+            window.removeEventListener('message', handleMessage)
+            popup?.close()
+            
+            // 用授权码换取 refresh_token
+            try {
+              const response = await api.post('/api/oauth/google/exchange', {
+                code: event.data.code,
+                client_id: formData.client_id || '',
+                client_secret: formData.client_secret || '',
+                redirect_uri: redirectUri
+              })
+              
+              if (response.data?.refresh_token) {
+                setFormData({ ...formData, refresh_token: response.data.refresh_token })
+                alert('获取刷新令牌成功！')
+              } else if (response.data?.error) {
+                alert('获取令牌失败: ' + response.data.error)
+              }
+            } catch (err: any) {
+              alert('获取令牌失败: ' + (err.message || '未知错误'))
+            }
+          } else if (event.data?.type === 'oauth_error') {
+            window.removeEventListener('message', handleMessage)
+            popup?.close()
+            alert('授权失败: ' + event.data.error)
+          }
+        }
+        
+        window.addEventListener('message', handleMessage)
+      }
+      
+      return (
+        <div key={key} className="drivers__form-field drivers__form-field--link">
+          <button type="button" className="drivers__btn-link" onClick={handleOAuthClick}>
+            {title}
+          </button>
+          {description && (
+            <span className="drivers__field-hint">{description}</span>
+          )}
+        </div>
+      )
+    }
+
     // select类型使用下拉框（后端返回enum数组或options字符串）
     if (schema.type === 'select' && (schema.enum || schema.options)) {
       let optionsList: {value: string, label: string}[] = []

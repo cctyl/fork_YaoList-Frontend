@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import DPlayer from 'dplayer'
+import Artplayer from 'artplayer'
 import Hls from 'hls.js'
 import './previews.scss'
 
@@ -21,7 +21,7 @@ interface VideoPreviewProps {
 export default function VideoPreview({ file, url, siblings = [] }: VideoPreviewProps) {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
-  const playerRef = useRef<DPlayer | null>(null)
+  const playerRef = useRef<Artplayer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(() => {
     const idx = siblings.findIndex(s => s.name === file.name)
@@ -83,30 +83,43 @@ export default function VideoPreview({ file, url, siblings = [] }: VideoPreviewP
       if (cancelled || !containerRef.current) return
 
       try {
-        const options: any = {
+        const options: ConstructorParameters<typeof Artplayer>[0] = {
           container: containerRef.current,
+          url: finalUrl,
           autoplay: true,
           theme: '#3b82f6',
           lang: navigator.language.startsWith('zh') ? 'zh-cn' : 'en',
           screenshot: true,
           hotkey: true,
-          preload: 'auto',
           volume: 0.7,
-          playbackSpeed: [0.5, 0.75, 1, 1.25, 1.5, 2],
-          video: {
-            url: finalUrl,
-            type: isHls ? 'customHls' : 'auto',
-            customType: isHls ? {
-              customHls: (video: HTMLVideoElement) => {
-                const hls = new Hls()
-                hls.loadSource(video.src)
-                hls.attachMedia(video)
+          playbackRate: true,
+          setting: true,
+          pip: true,
+          fullscreen: true,
+          fullscreenWeb: true,
+          miniProgressBar: true,
+          mutex: true,
+          backdrop: true,
+          autoSize: false,
+          autoMini: false,
+          playsInline: true,
+          ...(isHls ? {
+            type: 'm3u8',
+            customType: {
+              m3u8: function (video: HTMLVideoElement, url: string) {
+                if (Hls.isSupported()) {
+                  const hls = new Hls()
+                  hls.loadSource(url)
+                  hls.attachMedia(video)
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                  video.src = url
+                }
               }
-            } : undefined
-          }
+            }
+          } : {})
         }
 
-        playerRef.current = new DPlayer(options)
+        playerRef.current = new Artplayer(options)
 
         playerRef.current.on('error', () => {
           if (!cancelled) {
