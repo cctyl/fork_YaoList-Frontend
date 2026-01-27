@@ -291,6 +291,38 @@ export default function Drivers() {
       )
     }
 
+    // action类型显示为按钮，点击发送POST请求
+    if (schema.type === 'action' && schema.link) {
+      const handleActionClick = async () => {
+        try {
+          const response = await fetch(schema.link as string, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+          })
+          const result = await response.json()
+          if (result.code === 200) {
+            alert(result.message || '操作成功')
+          } else {
+            alert(result.message || '操作失败')
+          }
+        } catch (e) {
+          alert('请求失败: ' + (e as Error).message)
+        }
+      }
+      return (
+        <div key={key} className="drivers__form-field drivers__form-field--link">
+          <button type="button" className="drivers__btn-link" onClick={handleActionClick}>
+            {title}
+          </button>
+          {description && (
+            <span className="drivers__field-hint">{description}</span>
+          )}
+        </div>
+      )
+    }
+
     // oauth类型显示为按钮，弹窗授权后自动填入refresh_token
     if (schema.type === 'oauth' && schema.link) {
       const handleOAuthClick = async () => {
